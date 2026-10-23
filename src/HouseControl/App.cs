@@ -351,7 +351,7 @@ internal sealed partial class App : ApplicationContext
         var startup = StartWithWindows.State;
         menu.Add(startup == "disabled" ? "Start with Windows (off in Task Manager)" : "Start with Windows",
             () => SetStartWithWindows(startup != "on"), startup == "on");
-        menu.Add("Pair iPhone…", PairPhone);
+        menu.Add("Pair Phone…", PairPhone);
         foreach (var phone in _sync.ConnectedDevices) menu.Add($"{phone} is connected", PairPhone, isChecked: true);
         menu.Add(AgentLive ? "AI Access — Live" : "AI Access…", OpenAgent);
         if (AgentLive) menu.Add("Stop AI Access", StopAgent);
@@ -826,7 +826,7 @@ internal sealed partial class App : ApplicationContext
         _fullscreen.Dispose();
         _poll.Dispose();
         // Every window with a WebView in it closes while the message loop still runs (the editor,
-        // Settings, Pair iPhone, AI Access, a phone's sign-in code…): one left to the end of the
+        // Settings, Pair Phone, AI Access, a phone's sign-in code…): one left to the end of the
         // process takes it down from inside Windows' messaging.
         foreach (var form in Application.OpenForms.Cast<Form>().ToList()) form.Close();
         _island?.Dispose();

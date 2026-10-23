@@ -282,7 +282,7 @@ public sealed class SyncServer : IDisposable
         {
             case "hello":
                 var isNew = peer.Name.Length == 0;
-                peer.Name = message.Str("device") is { Length: > 0 } device ? device : "iPhone";
+                peer.Name = message.Str("device") is { Length: > 0 } device ? device : "Phone";
                 Diagnostic?.Invoke($"sync: hello from {peer.Name}, holding plan revision \"{message.Str("rev")}\"");
                 peer.Revision = message.Str("rev") ?? "";
                 if (Snapshot?.Invoke() is { } state) Send(state, peer);

@@ -565,7 +565,7 @@ export async function bootEditor(root) {
         h('p.note', 'Walls facing the camera are cut away, so the azimuth decides which side of the home is open.')),
       section('How it works',
         h('p.note', isPhone
-          ? 'Tap anything on the plan, or find it under Items, to edit it. “Save” keeps the plan on this iPhone and sends it to your paired Mac. Coordinates are metres: x grows to the right (east), z grows downwards (south).'
+          ? 'Tap anything on the plan, or find it under Items, to edit it. “Save” keeps the plan on this iPhone and sends it to your paired computer. Coordinates are metres: x grows to the right (east), z grows downwards (south).'
           : 'Pick anything on the plan or in the list to edit it. “Save & apply” writes the plan to disk and reloads the panel, the island and the widget. Coordinates are metres: x grows to the right (east), z grows downwards (south).')));
     } else if (kind === 'connections') {
       head('Connections', 'Where your real lamps and air conditioners live');
