@@ -112,8 +112,9 @@ public sealed class MdnsAdvertiser : IDisposable
     private static string Escape(string name) => name.Replace("\\", "\\\\").Replace(".", "\\.");
 
     /// <summary>
-    /// The IPv4 address phones on the Wi-Fi reach this PC at: the one of an up interface with a
-    /// default gateway, wireless or wired, not a VPN or a virtual switch when there is a choice.
+    /// The IPv4 address phones on the Wi-Fi reach this PC at: that of the Wi-Fi or wired adapter
+    /// with a default gateway. A VPN tunnel (WireGuard, OpenVPN, NordLynx…) or a virtual switch
+    /// has an address no phone on the Wi-Fi can reach, so it comes last, even with a gateway.
     /// </summary>
     public static IPAddress? PreferredAddress()
     {
@@ -123,12 +124,20 @@ public sealed class MdnsAdvertiser : IDisposable
             .SelectMany(x => x.p.UnicastAddresses
                 .Where(u => u.Address.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(u.Address))
                 .Select(u => (x.n, x.p, u.Address)))
-            .OrderByDescending(x => x.p.GatewayAddresses.Any(g => g.Address.AddressFamily == AddressFamily.InterNetwork && !g.Address.Equals(IPAddress.Any)))
-            .ThenByDescending(x => x.n.NetworkInterfaceType is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Ethernet)
-            .ThenBy(x => x.n.Description.Contains("Virtual", StringComparison.OrdinalIgnoreCase)
-                         || x.n.Description.Contains("VPN", StringComparison.OrdinalIgnoreCase)
-                         || x.n.Description.Contains("TAP", StringComparison.OrdinalIgnoreCase));
+            .OrderBy(x => IsTunnel(x.n))
+            .ThenByDescending(x => x.n.NetworkInterfaceType is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Ethernet
+                                   or NetworkInterfaceType.GigabitEthernet or NetworkInterfaceType.FastEthernetT)
+            .ThenByDescending(x => x.p.GatewayAddresses.Any(g => g.Address.AddressFamily == AddressFamily.InterNetwork && !g.Address.Equals(IPAddress.Any)));
         return candidates.Select(x => x.Address).FirstOrDefault();
+    }
+
+    /// <summary>A VPN tunnel or a virtual adapter, by its type or what its driver calls it.</summary>
+    internal static bool IsTunnel(NetworkInterface n)
+    {
+        if (n.NetworkInterfaceType is NetworkInterfaceType.Tunnel or NetworkInterfaceType.Ppp) return true;
+        var text = $"{n.Name} {n.Description}";
+        return new[] { "VPN", "TAP", "TUN", "WireGuard", "Wintun", "NordLynx", "Tunnel", "Virtual", "Hyper-V", "VMware", "VirtualBox", "Loopback" }
+            .Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
     }
 
     private const uint DnsRequestPending = 9506;
