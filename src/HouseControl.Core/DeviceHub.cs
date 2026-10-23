@@ -349,6 +349,113 @@ public sealed class DeviceHub
         }
     }
 
-    /// <summary>Disconnects a platform and forgets its credentials.</summary>
-    public void Disconnect(string service) => Service(service)?.Disconnect();
+    /// <summary>Disconnects a platform and forgets its credentials; a shared one's paired iPhones follow.</summary>
+    public void Disconnect(string service)
+    {
+        Service(service)?.Disconnect();
+        if (SharedConnection(service) != null) MarkChanged(service);
+    }
+
+    // MARK: Connections shared with paired iPhones
+
+    private ISharedConnection? SharedConnection(string id) => Services.OfType<ISharedConnection>().FirstOrDefault(s => s.Id == id);
+
+    private string StampsPath => Path.Combine(Path.GetDirectoryName(Log.FilePath)!, "connections-sync.json");
+
+    /// <summary>
+    /// When each shared platform was last connected or disconnected on this PC, or adopted from a
+    /// phone: the newer side wins when two devices disagree.
+    /// </summary>
+    private Dictionary<string, double> Stamps
+    {
+        get
+        {
+            var stamps = new Dictionary<string, double>();
+            try
+            {
+                if (File.Exists(StampsPath) && Json.ParseObject(File.ReadAllBytes(StampsPath)) is { } json)
+                    foreach (var (k, _) in json)
+                        if (json.Num(k) is { } v) stamps[k] = v;
+            }
+            catch (IOException) { }
+            return stamps;
+        }
+        set
+        {
+            var json = new JsonObject();
+            foreach (var (k, v) in value) json[k] = v;
+            try { Files.WriteAtomic(StampsPath, System.Text.Encoding.UTF8.GetBytes(Json.Serialize(json))); }
+            catch (IOException) { }
+        }
+    }
+
+    /// <summary>Remembers that a shared platform was connected (or disconnected) on this PC just now.</summary>
+    public void MarkChanged(string id)
+    {
+        var all = Stamps;
+        all[id] = Math.Max(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0, (all.TryGetValue(id, out var v) ? v : 0) + 0.001);
+        Stamps = all;
+    }
+
+    /// <summary>
+    /// This PC's Home Assistant and Hue connections for its paired phones: the address and token /
+    /// bridge key plus when they were set, or <c>removed</c> after a disconnect.
+    /// </summary>
+    public JsonObject ShareableConnections
+    {
+        get
+        {
+            var known = Stamps;
+            var outgoing = new JsonObject();
+            foreach (var service in Services.OfType<ISharedConnection>())
+            {
+                var updated = known.TryGetValue(service.Id, out var v) ? v : 0;
+                if (service.Shareable is { } config)
+                {
+                    var copy = (JsonObject)config.DeepClone();
+                    copy["updated"] = updated;
+                    outgoing[service.Id] = copy;
+                }
+                else if (updated > 0)
+                {
+                    outgoing[service.Id] = new JsonObject { ["removed"] = true, ["updated"] = updated };
+                }
+            }
+            return outgoing;
+        }
+    }
+
+    /// <summary>
+    /// Takes what a phone shared, platform by platform, where it is newer than what this PC has. A
+    /// platform missing from <paramref name="shared"/> is left alone. True when a connection changed here.
+    /// </summary>
+    public bool AdoptConnections(JsonObject shared)
+    {
+        var known = Stamps;
+        var changed = false;
+        foreach (var service in Services.OfType<ISharedConnection>())
+        {
+            if (shared.Obj(service.Id) is not { } incoming) continue;
+            var theirs = incoming.Num("updated") ?? 0;
+            var ours = known.TryGetValue(service.Id, out var v) ? v : 0;
+            // A peer without stamps (an older version) only fills in what was never set here.
+            var newer = theirs > 0 ? theirs > ours : ours == 0;
+            if (!newer) continue;
+            var before = service.Shareable?.ToJsonString();
+            if (incoming.Bool("removed") == true)
+            {
+                if (service is IDeviceService device) device.Disconnect();
+            }
+            else
+            {
+                var config = (JsonObject)incoming.DeepClone();
+                config.Remove("updated");
+                service.Adopt(config);
+            }
+            known[service.Id] = theirs;
+            if (service.Shareable?.ToJsonString() != before) changed = true;
+        }
+        Stamps = known;
+        return changed;
+    }
 }

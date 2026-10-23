@@ -18,7 +18,7 @@ namespace HouseControl.Core.HomeAssistant;
 /// Used from the UI thread, like the rest of the core. <see cref="Changed"/> is raised on the
 /// synchronization context the service was created on (directly when there was none).
 /// </remarks>
-public sealed class HomeAssistantService : IDeviceService, IDisposable
+public sealed class HomeAssistantService : IDeviceService, ISharedConnection, IDisposable
 {
     public string Id => "homeassistant";
     public string Title => "Home Assistant";
@@ -99,6 +99,33 @@ public sealed class HomeAssistantService : IDeviceService, IDisposable
         candidate = candidate with { Name = about.Str("location_name"), Version = about.Str("version") };
         _config = candidate;
         _vault.Write(candidate.Encode());
+        Listen();
+    }
+
+    /// <summary>
+    /// The connection as a paired iPhone takes it over: address, token, name and version.
+    /// Only ever sent over the sync channel, which nothing but a paired phone can open.
+    /// </summary>
+    public JsonObject? Shareable => _config is not { } config ? null : new JsonObject
+    {
+        ["url"] = config.Url,
+        ["token"] = config.Token,
+        ["name"] = config.Name ?? "",
+        ["version"] = config.Version ?? "",
+    };
+
+    /// <summary>Takes over a connection a paired iPhone shared; null (or nothing usable) disconnects.</summary>
+    public void Adopt(JsonObject? shared)
+    {
+        if (shared.Str("url") is not { } url || shared.Str("token") is not { } token)
+        {
+            if (_config != null) Disconnect();
+            return;
+        }
+        var name = shared.Str("name") is { Length: > 0 } n ? n : null;
+        if (_config is { } current && current.Url == url && current.Token == token && current.Name == name) return;
+        _config = new Config(url, token, name, shared.Str("version"));
+        _vault.Write(_config.Encode());
         Listen();
     }
 

@@ -44,6 +44,19 @@ public interface IDeviceService
     void Disconnect();
 }
 
+/// <summary>
+/// A platform whose connection travels between this PC and its paired iPhones (Home Assistant
+/// and Hue): what it hands over, and how it takes over what the other side sent.
+/// </summary>
+public interface ISharedConnection
+{
+    string Id { get; }
+    /// <summary>The address and credentials; null while not connected.</summary>
+    JsonObject? Shareable { get; }
+    /// <summary>Takes over a connection another device shared; null disconnects.</summary>
+    void Adopt(JsonObject? shared);
+}
+
 public enum DeviceKind { Light, Ac, Sensor }
 
 public static class DeviceKinds

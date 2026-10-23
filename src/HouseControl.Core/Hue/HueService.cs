@@ -25,7 +25,7 @@ public sealed class HueButtonNotPressedException() : ServiceFailure("Press the r
 /// only reads the watched ids (swapped whole, never changed in place); <see cref="Changed"/> is
 /// raised on the synchronization context the service was created on.
 /// </remarks>
-public sealed class HueService : IDeviceService, IDisposable
+public sealed class HueService : IDeviceService, ISharedConnection, IDisposable
 {
     public string Id => "hue";
     public string Title => "Philips Hue";
