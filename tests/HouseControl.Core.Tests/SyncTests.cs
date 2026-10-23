@@ -80,12 +80,35 @@ public class SyncTests
 
         public void Dispose() => _tls.Close();
 
-        /// <summary>What the iPhone's Network framework offers: TLS 1.2, PSK identity "housecontrol", AES-128-GCM.</summary>
+        /// <summary>
+        /// What the iPhone's Network framework offers (seen in the app's log): TLS 1.2, PSK identity
+        /// "housecontrol", AES-GCM and CCM, and a status_request extension asking for OCSP.
+        /// </summary>
         private sealed class Client(byte[] psk) : PskTlsClient(new BcTlsCrypto(new SecureRandom()),
             new BasicTlsPskIdentity(Encoding.UTF8.GetBytes("housecontrol"), psk))
         {
             protected override ProtocolVersion[] GetSupportedVersions() => ProtocolVersion.TLSv12.Only();
-            protected override int[] GetSupportedCipherSuites() => [CipherSuite.TLS_PSK_WITH_AES_128_GCM_SHA256];
+            protected override int[] GetSupportedCipherSuites() =>
+            [
+                CipherSuite.TLS_PSK_WITH_AES_128_GCM_SHA256, CipherSuite.TLS_PSK_WITH_AES_256_GCM_SHA384,
+                CipherSuite.TLS_PSK_WITH_AES_256_CCM, CipherSuite.TLS_PSK_WITH_AES_128_CCM,
+            ];
+
+            public override IDictionary<int, byte[]> GetClientExtensions()
+            {
+                var extensions = base.GetClientExtensions() ?? new Dictionary<int, byte[]>();
+                TlsExtensionsUtilities.AddStatusRequestExtension(extensions,
+                    new CertificateStatusRequest(CertificateStatusType.ocsp, new OcspStatusRequest(null, null)));
+                return extensions;
+            }
+
+            // The server must not take up status_request: no certificate goes with a pre-shared key.
+            public override void ProcessServerExtensions(IDictionary<int, byte[]> serverExtensions)
+            {
+                if (serverExtensions != null && serverExtensions.ContainsKey(ExtensionType.status_request))
+                    throw new TlsFatalAlert(AlertDescription.decode_error, "status_request answered for a PSK handshake");
+                base.ProcessServerExtensions(serverExtensions);
+            }
         }
     }
 

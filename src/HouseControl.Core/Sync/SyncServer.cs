@@ -203,7 +203,7 @@ public sealed class SyncServer : IDisposable
             // A phone that does not hold the key fails the handshake; one that never finishes it is dropped.
             socket.ReceiveTimeout = 15_000;
             var tls = new TlsServerProtocol(new NetworkStream(socket, ownsSocket: true));
-            tls.Accept(new PskServer(psk));
+            tls.Accept(new PskServer(psk, Diagnostic));
             socket.ReceiveTimeout = 0;
             peer.Stream = tls.Stream;
         }
@@ -318,10 +318,55 @@ public sealed class SyncServer : IDisposable
     /// TLS 1.2, TLS_PSK_WITH_AES_128_GCM_SHA256 and nothing else, with the key derived from the
     /// pairing: a phone that does not hold the pairing key cannot complete the handshake.
     /// </summary>
-    internal sealed class PskServer(byte[] psk) : PskTlsServer(new BcTlsCrypto(new SecureRandom()), new Identities(psk))
+    internal sealed class PskServer(byte[] psk, Action<string>? diagnostic = null)
+        : PskTlsServer(new BcTlsCrypto(new SecureRandom()), new Identities(psk))
     {
         protected override ProtocolVersion[] GetSupportedVersions() => ProtocolVersion.TLSv12.Only();
         protected override int[] GetSupportedCipherSuites() => [CipherSuite.TLS_PSK_WITH_AES_128_GCM_SHA256];
+
+        // The iPhone asks for a certificate's revocation status (status_request), as Apple's TLS
+        // always does. With a pre-shared key there is no certificate: agreeing would promise a
+        // CertificateStatus message that never comes, and the iPhone ends with decode_error.
+        protected override bool AllowCertificateStatus() => false;
+
+        // What the phone offered and what went wrong, for the log: the first thing to look at when a
+        // handshake fails between two different TLS implementations.
+        public override void NotifyClientVersion(ProtocolVersion clientVersion)
+        {
+            diagnostic?.Invoke($"sync: client hello, version {clientVersion}");
+            base.NotifyClientVersion(clientVersion);
+        }
+
+        public override void NotifyOfferedCipherSuites(int[] offeredCipherSuites)
+        {
+            diagnostic?.Invoke($"sync: cipher suites offered: {string.Join(" ", offeredCipherSuites.Select(s => $"0x{s:X4}"))}");
+            base.NotifyOfferedCipherSuites(offeredCipherSuites);
+        }
+
+        public override void ProcessClientExtensions(IDictionary<int, byte[]> clientExtensions)
+        {
+            diagnostic?.Invoke($"sync: extensions offered: {string.Join(" ", clientExtensions.Select(e => $"{e.Key}({e.Value.Length})"))}");
+            base.ProcessClientExtensions(clientExtensions);
+        }
+
+        public override IDictionary<int, byte[]> GetServerExtensions()
+        {
+            var extensions = base.GetServerExtensions();
+            diagnostic?.Invoke($"sync: extensions answered: {string.Join(" ", extensions?.Keys.Select(k => k.ToString()) ?? [])}");
+            return extensions!;
+        }
+
+        public override void NotifyAlertRaised(short alertLevel, short alertDescription, string message, Exception cause) =>
+            diagnostic?.Invoke($"sync: alert sent: {AlertDescription.GetText(alertDescription)} ({message} {cause?.Message})");
+
+        public override void NotifyAlertReceived(short alertLevel, short alertDescription) =>
+            diagnostic?.Invoke($"sync: alert received: {AlertDescription.GetText(alertDescription)}");
+
+        public override void NotifyHandshakeComplete()
+        {
+            diagnostic?.Invoke("sync: handshake complete");
+            base.NotifyHandshakeComplete();
+        }
     }
 
     /// <summary>
