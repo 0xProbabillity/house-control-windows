@@ -4,7 +4,7 @@ Give ChatGPT, Claude or any other AI assistant a private link to your home. It c
 dim the lights, run the air conditioners and scenes — and change the 3D model itself: send it photos of your living
 room and ask it to rebuild the room, or tell it you moved the sofa.
 
-There is no House Control server and no account. Your Mac answers the assistant itself, through a tunnel that exists
+There is no House Control server and no account. Your PC answers the assistant itself, through a tunnel that exists
 only while AI Access is on.
 
 <p align="center">
@@ -13,11 +13,11 @@ only while AI Access is on.
 
 ## Start
 
-1. Right-click the menu bar icon → **AI Access…** (or the gear in the panel → **AI access…**).
+1. Right-click the tray icon → **AI Access…** (or the gear in the panel → **AI access…**).
 2. Press **Start AI Access**. A few seconds later the window shows your private link.
 3. Hand it to an assistant — see [Connect an assistant](#connect-an-assistant).
 
-While the link is live, sparkles appear next to the house in the menu bar and an **AI** badge in the panel.
+While the link is live, a sparkle appears on the house in the tray icon and an **AI** badge in the panel.
 Everything an assistant reads or does shows up in the window's **Activity** feed as it happens, and the panel and
 the island at the notch show each change with sparkles.
 
@@ -26,18 +26,19 @@ the island at the notch show each change with sparkles.
 ## How it works
 
 ```
-assistant ──HTTPS──▶ Cloudflare quick tunnel ──▶ cloudflared on your Mac ──▶ 127.0.0.1 (House Control) ──▶ your devices
+assistant ──HTTPS──▶ Cloudflare quick tunnel ──▶ cloudflared on your PC ──▶ 127.0.0.1 (House Control) ──▶ your devices
 ```
 
 - House Control listens on the loopback interface only (port 7419, or any free one). Nothing on your network sees it.
-- To be reachable from ChatGPT's or Claude's servers, the Mac opens a free
+- To be reachable from ChatGPT's or Claude's servers, the PC opens a free
   [Cloudflare Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/):
   a random `https://….trycloudflare.com` address that exists while `cloudflared` runs. No Cloudflare account is needed.
-  If `cloudflared` is not installed (`brew install cloudflared`), the window offers to download it from Cloudflare's
-  GitHub releases and keeps it only if it carries Cloudflare's Developer ID signature.
+  If `cloudflared` is not installed (`winget install Cloudflare.cloudflared`), the window offers to download it from
+  Cloudflare's GitHub releases and keeps it only if Windows confirms it is signed by Cloudflare. While it runs it
+  is tied to House Control: when the app quits, or is ended any other way, Windows ends the tunnel with it.
 - Every address carries a random 128-bit key: `https://….trycloudflare.com/<key>/…`. Without the key, every path
   answers 404.
-- **This Mac only** skips the tunnel: the link is `http://127.0.0.1:7419/<key>`, for apps running on the Mac
+- **This PC only** skips the tunnel: the link is `http://127.0.0.1:7419/<key>`, for apps running on the PC
   (Claude Code, Cursor, VS Code, LM Studio, scripts).
 
 ## Connect an assistant
@@ -109,7 +110,7 @@ curl -X POST https://….trycloudflare.com/<key>/api/set_lights -d '{"lights": [
 | `render_home` | A picture of the 3D model, whole or one room, so the assistant can check its work |
 
 Edits are checked before they are saved (unknown furniture, overlapping ids, rooms that do not add up are refused with
-a reason the assistant can act on). The model on your screen updates at once, paired iPhones receive it, and
+a reason the assistant can act on). The model on your screen updates at once, and
 **Undo home edit** in the window — or the assistant itself — reverts it.
 
 ## What it may do
@@ -129,8 +130,8 @@ The **What it may do** switches take effect immediately, even while the link is 
   `"linked": true`, and a plan the assistant writes keeps them as they were. Devices linked to real hardware cannot be
   removed through the link.
 - Cloudflare relays the connection: HTTPS from the assistant to Cloudflare, an encrypted tunnel from Cloudflare to your
-  Mac. Like any HTTPS proxy, Cloudflare's edge handles the traffic in between. Use **This Mac only** when the assistant
-  runs on the Mac itself.
+  PC. Like any HTTPS proxy, Cloudflare's edge handles the traffic in between. Use **This PC only** when the assistant
+  runs on the PC itself.
 - Nothing about AI Access is stored except your three settings. The link exists only in memory; a `cloudflared` left
   over after a crash is stopped at the next launch.
 - Requests are rate-limited (240 a minute) and bodies are capped at 4 MB.

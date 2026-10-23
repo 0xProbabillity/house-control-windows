@@ -3,12 +3,12 @@
 A home is one JSON document. The 3D scene, the panel and the editor are all built from it, so swapping the
 file swaps the home.
 
-- Your plan: `~/Library/Application Support/HouseControl/plan.json`
+- Your plan: `%APPDATA%\HouseControl\plan.json`
 - Bundled demos: [`web/public/plans/home.json`](../web/public/plans/home.json) and
   [`studio.json`](../web/public/plans/studio.json)
 
 You rarely need to write it by hand — **Edit Home…** does it for you — but it is plain, stable and easy to
-generate or version. Load a file with **Load Floor Plan…** in the menu bar icon's right-click menu, or with
+generate or version. Load a file with **Load Floor Plan…** in the tray icon's right-click menu, or with
 **Import…** in the editor.
 
 <p align="center">
@@ -160,7 +160,7 @@ A light or an AC becomes real when it is linked to a device of a connected platf
 in when you pick a device under **Real device**; by hand it looks like this:
 
 ```jsonc
-// Home Assistant (an entity id), Philips Hue (the bridge's light id), Apple Home (HomeKit's service id)
+// Home Assistant (an entity id), Philips Hue (the bridge's light id)
 { "id": "living.floor", "name": "Floor lamp", "room": "living", "type": "floor", "pos": [5.8, 0.6],
   "link": { "service": "homeassistant", "id": "light.floor_lamp" } }
 

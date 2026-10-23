@@ -1,0 +1,30 @@
+name: CI
+
+# Every push and pull request: the core's tests, and the app built for x64.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build and test
+        shell: pwsh
+        run: ./scripts/build.ps1 -Arch x64 -SkipInstaller

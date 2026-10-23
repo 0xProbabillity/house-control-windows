@@ -8,7 +8,7 @@ every device in the plan is simulated.
 You need the phone app with your devices already added to it. No Tuya developer account is required.
 
 1. In the phone app: **Me → ⚙ Settings → Account and Security**. Copy the **User Code** at the bottom of the screen.
-2. In House Control: right-click the menu bar icon → **Edit Home… → Connections → Smart Life**. Enter the User Code and press **Show QR code**.
+2. In House Control: right-click the tray icon → **Edit Home… → Connections → Smart Life**. Enter the User Code and press **Show QR code**.
 3. Scan the code with the phone app (the scanner icon on its Home tab) and confirm.
 4. The editor lists the devices of the account.
 
@@ -16,8 +16,8 @@ This is the sign-in the Tuya integration of Home Assistant uses. `SmartLifeServi
 Tuya's open-source [`tuya-device-sharing-sdk`](https://github.com/tuya/tuya-device-sharing-sdk) and presents
 the same client identifier to Tuya. Requests are AES-GCM encrypted and HMAC-SHA256 signed.
 
-The session is stored in `~/Library/Application Support/HouseControl/smartlife.json`, readable only by your
-user, and is refreshed automatically. **Sign out** in the editor deletes it.
+The session is stored in `%APPDATA%\HouseControl\smartlife.json`, encrypted for your Windows account,
+and is refreshed automatically. **Sign out** in the editor deletes it.
 
 ## Linking devices to the plan
 
@@ -71,7 +71,7 @@ out the infrared code from the state it remembers for that remote. That shapes h
 
 ## When a device does not react
 
-**Reveal Device Log** in the menu bar icon's right-click menu opens `events.log`: every command sent to a
+**Reveal Device Log** (tray icon menu → **About House Control**, or **Settings → Home**) opens `events.log`: every command sent to a
 real device and what the cloud answered. That is the first place to look.
 
 ```
@@ -93,7 +93,7 @@ To see exactly what the cloud knows about a device — its category, its functio
 current status — run the read-only diagnostic with its device ID (shown in the editor):
 
 ```bash
-build/HouseControl.app/Contents/MacOS/HouseControl --diagnose <device id>
+HouseControl.exe --diagnose <device id>
 ```
 
 It sends nothing to the device.
