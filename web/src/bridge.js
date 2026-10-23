@@ -1,24 +1,23 @@
-// Thin bridge to the native shell (the macOS menu bar app or the iPhone app). In a plain
-// browser every call is a no-op, so the same bundle runs under `vite dev` too.
+// Thin bridge to the native shell (the Windows app, through WebView2). In a plain browser
+// every call is a no-op, so the same bundle runs under `vite dev` too.
 
-const handler = window.webkit?.messageHandlers?.house;
+const webview = window.chrome?.webview;
 
-export const isNative = Boolean(handler);
+export const isNative = Boolean(webview);
 
-// 'ios' inside the iPhone app (or with ?platform=ios in a browser, to work on that layout).
+// 'windows' inside the app; ?platform=… in a browser to work on another layout.
 export const platform = window.__HOUSE_BOOT__?.platform
-  || new URLSearchParams(location.search).get('platform') || (handler ? 'macos' : 'web');
+  || new URLSearchParams(location.search).get('platform') || (webview ? 'windows' : 'web');
 export const isPhone = platform === 'ios';
+export const isWindows = platform === 'windows' || (!webview && platform === 'web');
 
 export function post(type, payload = {}) {
-  handler?.postMessage({ type, ...payload });
+  webview?.postMessage({ type, ...payload });
 }
 
-// A tap you can feel, on the iPhone only: 'tick' for a step of a slider, 'light' /
-// 'medium' for a switch or a scene, 'error' when a device refuses a change.
-export function haptic(kind = 'light') {
-  if (isPhone) post('haptic', { kind });
-}
+// A tap you can feel: there is nothing to feel on a PC, so this is a no-op kept for the
+// shared UI code that calls it.
+export function haptic() {}
 
 // Native -> JS entry points are attached here by main.js.
 export const incoming = (window.house = window.house || {});
@@ -28,11 +27,11 @@ let nextId = 1;
 const pending = new Map();
 
 export function call(type, payload = {}) {
-  if (!handler) return Promise.reject(new Error('Only available inside the app'));
+  if (!webview) return Promise.reject(new Error('Only available inside the app'));
   return new Promise((resolve, reject) => {
     const id = nextId++;
     pending.set(id, { resolve, reject });
-    handler.postMessage({ type, callId: id, ...payload });
+    webview.postMessage({ type, callId: id, ...payload });
   });
 }
 

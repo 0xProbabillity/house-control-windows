@@ -1,4 +1,4 @@
-// The control panel that lives in the menu bar popover: header, scenes, rooms,
+// The control panel that opens from the tray icon: header, scenes, rooms,
 // device tiles and the detail sheets for a light or an AC.
 import * as THREE from 'three';
 import { h, clamp, createSlider, createColorPad, openMenu } from './dom.js';
@@ -44,7 +44,7 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
   const homeSub = h('div.home-sub');
   const power = h('button.round.power', { title: 'Everything on / off', 'aria-label': 'Toggle everything', onclick: toggleEverything }, icon('power', 21, 2.2));
   const gear = h('button.round', { title: 'Settings and floor plans', 'aria-label': 'Settings and floor plans', onclick: () => onMenu(gear) }, icon('settings', 17));
-  // Shown while an AI assistant has a link to this home (AI Access on the Mac).
+  // Shown while an AI assistant has a link to this home (AI Access).
   const aiBadge = h('button.ai-badge', { hidden: true, title: 'An AI assistant has access — click to manage', 'aria-label': 'AI access',
     onclick: () => onMenu(aiBadge, 'agent') }, icon('sparkles', 13, 2.2), h('span', 'AI'));
 

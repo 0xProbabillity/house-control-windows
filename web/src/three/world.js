@@ -380,6 +380,8 @@ export function createWorld(canvas, config, store, { onHover, onPick, background
   const world = {
     lights,
     acs,
+    // For the dev console and scripted checks (HOUSE_EVAL_DIR): the three.js objects behind the view.
+    get debug() { return { scene, renderer, camera, composer, render: () => wake(4) }; },
 
     setInsets(top, bottom) { topInset = top; bottomInset = bottom; resize(); },
     resize,

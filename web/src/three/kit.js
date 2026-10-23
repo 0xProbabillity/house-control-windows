@@ -61,7 +61,9 @@ const TILE = 2.4; // metres covered by one texture repeat
 function canvasTexture(size, draw) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
-  draw(c.getContext('2d'), size);
+  // A CPU-backed canvas: Chromium moves large 2D canvases to the GPU, and on some Windows
+  // drivers (ANGLE on Direct3D 11) copying one of those into a WebGL texture yields black.
+  draw(c.getContext('2d', { willReadFrequently: true }), size);
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.colorSpace = THREE.SRGBColorSpace;

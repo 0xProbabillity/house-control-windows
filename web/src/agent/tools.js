@@ -567,8 +567,8 @@ export function createAgent({ store, config, raw, render, onAction }) {
     const L = [];
     L.push(`# House Control — ${config.name}`, '');
     L.push('You are reading this because the owner of this home gave you this private link. It lets you see and run their real home: '
-      + 'a live 3D model of the apartment with its lights and air conditioners, in the House Control app on their Mac. '
-      + 'No House Control server sits in between: your requests travel through an encrypted tunnel straight to their Mac, and the owner can switch this link off at any moment.', '');
+      + 'a live 3D model of the apartment with its lights and air conditioners, in the House Control app on their PC. '
+      + 'No House Control server sits in between: your requests travel through an encrypted tunnel straight to their PC, and the owner can switch this link off at any moment.', '');
     L.push('## Rules', '');
     L.push('- Do what the user asks, nothing more. Do not "tidy up" other devices.');
     L.push('- After acting, tell the user in one short sentence what changed (e.g. "Done — the living room lamp is on at 40%").');

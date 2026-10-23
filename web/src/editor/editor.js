@@ -90,8 +90,8 @@ export async function bootEditor(root) {
     h('header.bar',
       h('div.bar-title', icon('home', 17), nameInput),
       h('div.bar-actions',
-        h('button.btn', { title: 'Undo (⌘Z)', onclick: () => stepHistory(undo, redo) }, 'Undo'),
-        h('button.btn', { title: 'Redo (⇧⌘Z)', onclick: () => stepHistory(redo, undo) }, 'Redo'),
+        h('button.btn', { title: 'Undo (Ctrl+Z)', onclick: () => stepHistory(undo, redo) }, 'Undo'),
+        h('button.btn', { title: 'Redo (Ctrl+Y)', onclick: () => stepHistory(redo, undo) }, 'Redo'),
         h('button.btn', { onclick: importPlan }, 'Import…'),
         h('button.btn', { onclick: exportPlan }, 'Export…'),
         saveBtn)),
@@ -566,7 +566,7 @@ export async function bootEditor(root) {
       section('How it works',
         h('p.note', isPhone
           ? 'Tap anything on the plan, or find it under Items, to edit it. “Save” keeps the plan on this iPhone and sends it to your paired Mac. Coordinates are metres: x grows to the right (east), z grows downwards (south).'
-          : 'Pick anything on the plan or in the list to edit it. “Save & apply” writes the plan to disk and reloads the menu bar panel. Coordinates are metres: x grows to the right (east), z grows downwards (south).')));
+          : 'Pick anything on the plan or in the list to edit it. “Save & apply” writes the plan to disk and reloads the panel, the island and the widget. Coordinates are metres: x grows to the right (east), z grows downwards (south).')));
     } else if (kind === 'connections') {
       head('Connections', 'Where your real lamps and air conditioners live');
       if (isPhone) nodes.push(h('button.back-link', { onclick: () => select({ kind: 'home' }) }, icon('back', 14, 2.2), 'Home'));
@@ -777,7 +777,7 @@ export async function bootEditor(root) {
         h('label.field', h('span', 'User Code'), codeInput),
         h('button.btn.primary.wide', { onclick: start, disabled: !isNative }, 'Show QR code'),
         qrBox, message,
-        h('p.note', 'Free and needs no Tuya developer account: this is the same sign-in the Home Assistant integration uses. The session is stored only on this Mac.')));
+        h('p.note', 'Free and needs no Tuya developer account: this is the same sign-in the Home Assistant integration uses. The session is stored only on this PC, encrypted for your Windows account.')));
     }
 
     // The developer-project route stays available for those who already have one.
@@ -820,7 +820,7 @@ export async function bootEditor(root) {
       dirty = false;
       validate();
       haptic('success');
-      toast(isPhone ? 'Saved' : 'Saved — the menu bar panel now shows this home');
+      toast(isPhone ? 'Saved' : 'Saved — the panel now shows this home');
     } catch (e) {
       toast(e.message, true);
     }
@@ -877,6 +877,9 @@ export async function bootEditor(root) {
     if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === 'z' && !typing) {
       ev.preventDefault();
       if (ev.shiftKey) stepHistory(redo, undo); else stepHistory(undo, redo);
+    } else if (ev.ctrlKey && ev.key.toLowerCase() === 'y' && !typing) {
+      ev.preventDefault();
+      stepHistory(redo, undo);
     } else if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === 's') {
       ev.preventDefault();
       save();

@@ -1,11 +1,11 @@
-import { loadRawConfig, normalize, isLinked } from './config.js';
+﻿import { loadRawConfig, normalize, isLinked } from './config.js';
 import { createStore } from './store.js';
 import { createWorld } from './three/world.js';
 import { createPanel } from './ui/panel.js';
 import { createAgent } from './agent/tools.js';
 import { h, openMenu } from './ui/dom.js';
 import { icon } from './ui/icons.js';
-import { isNative, isPhone, post, incoming, haptic } from './bridge.js';
+import { isNative, isPhone, isWindows, post, incoming, haptic } from './bridge.js';
 import { publishWidgets, runWidgetAction } from './widgets.js';
 
 const DEMO_PLANS = [
@@ -17,6 +17,7 @@ const STAGE_INSETS = [62, 50]; // header above, panel overlap below
 const app = document.getElementById('app');
 if (isNative) document.documentElement.classList.add('native');
 if (isPhone) document.documentElement.classList.add('ios');
+if (isWindows) document.documentElement.classList.add('windows');
 
 // ?safeTop=62&safeBottom=34 stands in for a phone's safe areas when its layout is looked at in a browser.
 for (const edge of ['top', 'bottom']) {
@@ -35,7 +36,7 @@ function safeAreaTop() {
 function fatal(title, error) {
   console.error(error);
   app.replaceChildren(h('div.fatal', h('h1', title),
-    'The floor plan could not be loaded. Fix the file and reload, or pick another plan from the menu bar icon.',
+    'The floor plan could not be loaded. Fix the file and reload, or pick another plan from the menu of the tray icon.',
     h('code', String(error?.message || error))));
   post('ready', { error: String(error?.message || error) });
 }
@@ -93,7 +94,18 @@ async function boot() {
   applyInsets();
   new ResizeObserver(() => (isPhone ? applyInsets() : world.resize())).observe(panel.canvas);
 
-  const show = () => { world.setRunning(true); world.intro(); };
+  const card = app.querySelector('.card');
+  // The panel slides in from the taskbar like the flyouts Windows opens from it, and fades away.
+  const show = () => {
+    document.documentElement.classList.remove('leaving');
+    card?.classList.remove('enter');
+    void card?.offsetWidth; // restart the entrance
+    card?.classList.add('enter');
+    world.setRunning(true);
+    world.intro();
+  };
+  incoming.placement = (edge) => { document.documentElement.dataset.edge = edge; };
+  incoming.leave = () => document.documentElement.classList.add('leaving');
   const hide = () => { world.setRunning(false); };
   incoming.shown = show;
   incoming.hidden = () => { hide(); panel.closeSheet(); if (panel.room !== 'all') panel.selectRoom('all'); };
@@ -184,7 +196,7 @@ async function boot() {
         { label: 'Reveal plan file', action: () => post('revealPlan') },
         '-',
         {
-          label: openAtLogin === 'needsApproval' ? 'Open at login — allow in Settings…' : 'Open at login',
+          label: 'Start with Windows',
           icon: openAtLogin === 'on' ? icon('check', 16, 2.4) : null,
           action: () => post('setOpenAtLogin', { on: openAtLogin !== 'on' }),
         },
@@ -194,10 +206,10 @@ async function boot() {
     openMenu(panel.anchorMenu, anchor, items);
   }
 
-  // ⌘, opens the Mac's Settings window, as in every Mac app (the panel has no menu bar of its own).
+  // Ctrl+, opens Settings (the panel has no menu bar of its own).
   if (isNative && !isPhone) {
     window.addEventListener('keydown', (ev) => {
-      if (ev.metaKey && ev.key === ',') { ev.preventDefault(); post('openSettings'); }
+      if ((ev.ctrlKey || ev.metaKey) && ev.key === ',') { ev.preventDefault(); post('openSettings'); }
     });
   }
 
@@ -236,9 +248,13 @@ if (mode === 'editor') {
   import('./editor/editor.js').then((m) => m.bootEditor(app)).catch((e) => fatal('Editor failed to start', e));
 } else if (mode === 'agent') {
   import('./agent/console.js').then((m) => m.bootConsole(app)).catch((e) => fatal('AI Access failed to start', e));
-} else if (mode === 'island') {
+} else if (mode === 'settings') {
+  document.documentElement.classList.add('mode-settings');
+  import('./settings/settings.js').then((m) => m.bootSettings(app)).catch((e) => fatal('Settings failed to start', e));
+} else if (mode === 'island' || mode === 'widget') {
   document.documentElement.classList.add('mode-island');
-  import('./island/island.js').then((m) => m.bootIsland(app)).catch((e) => console.error(e));
+  if (mode === 'widget') document.documentElement.classList.add('mode-widget');
+  import('./island/island.js').then((m) => m.bootIsland(app, { desk: mode === 'widget' })).catch((e) => console.error(e));
 } else {
   boot();
 }

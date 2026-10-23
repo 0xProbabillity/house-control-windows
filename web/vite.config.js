@@ -5,7 +5,7 @@ export default defineConfig({
   // 5199 by default; PORT overrides it when that one is taken.
   server: { port: Number(process.env.PORT) || 5199, strictPort: true },
   build: {
-    target: 'safari17',
+    target: 'chrome120', // WebView2 is Chromium (Edge)
     outDir: 'dist',
     emptyOutDir: true,
     chunkSizeWarningLimit: 1500,

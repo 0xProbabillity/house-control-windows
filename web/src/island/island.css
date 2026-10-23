@@ -278,3 +278,21 @@ html.mode-island #app { display: block; padding: 0; height: 100%; }
   .isle-glow { transform: none; }
 }
 
+
+/* ---------- Windows ---------- */
+
+html.windows .isle { font-family: 'Segoe UI Variable Text', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif; }
+
+/* Slim: at rest only a thin line at the top edge, out of the way of the title bars under it. */
+.isle.slim[data-state='collapsed'] { --h: 5px; --ear: 0px; --r: 3px; --notch-w: 150px; }
+.isle.slim[data-state='collapsed'] .isle-shape { background: rgba(14, 16, 22, 0.92); box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.14); }
+.isle.slim[data-state='collapsed'] .ear { opacity: 0; }
+
+/* The desktop widget: the open island as a card of its own, with room around it for its shadow
+   (DesktopWidget.Pad). It never closes, so nothing in it waits for an opening spring. */
+.isle.desk { padding-top: 28px; }
+.isle.desk .isle-shape { border-radius: 26px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08); background: rgba(6, 8, 14, 0.94); }
+.isle.desk .isle-glow { top: 28px; border-radius: 26px; }
+.isle.desk .isle-head.grab { cursor: grab; }
+.isle.desk .isle-head.grab:active { cursor: grabbing; }
+.isle.desk .reveal { transition-delay: 0ms !important; }

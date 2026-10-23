@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Windows shell: tray icon, the panel above the taskbar, the island at the top of the
+       screen, the desktop widget, and the editor / settings / AI Access windows. Every view is the
+       web UI in ../../web, shown by WebView2. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\HouseControl.ico</ApplicationIcon>
+    <AssemblyName>HouseControl</AssemblyName>
+    <RootNamespace>HouseControl</RootNamespace>
+    <Product>House Control</Product>
+    <Company>0xProbability</Company>
+    <Copyright>Copyright © 2026 0xProbability</Copyright>
+    <Description>Your home as a live 3D model, in the Windows taskbar.</Description>
+    <Version>1.0.0</Version>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <!-- WebView2's package also carries its WPF control, whose WindowsBase reference is never loaded here. -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+    <!-- Starts faster: the code is compiled ahead of time when published. -->
+    <TieredPGO>true</TieredPGO>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <ServerGarbageCollector>false</ServerGarbageCollector>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HouseControl.Core\HouseControl.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Assets\HouseControl.ico" />
+    <EmbeddedResource Include="Assets\HouseControl.ico" LogicalName="HouseControl.ico" />
+  </ItemGroup>
+
+  <!-- The built web UI (npm run build in ../../web) travels next to the executable. -->
+  <ItemGroup Condition="Exists('..\..\web\dist\index.html')">
+    <Content Include="..\..\web\dist\**\*" LinkBase="web" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

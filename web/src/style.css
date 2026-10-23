@@ -801,3 +801,40 @@ html.ios .fatal { margin: calc(env(safe-area-inset-top, 0px) + 20px) 16px 0; wid
     animation-duration: 1ms !important; transition-duration: 1ms !important;
   }
 }
+
+/* ---------- Windows: a flyout above the taskbar ---------- */
+
+/* The window keeps 14px of transparent room around the card for its shadow (PanelWindow.Pad). */
+html.windows.native #app { padding: 14px; }
+html.windows .notch { display: none; }
+html.windows .card { border-radius: 14px; }
+html.windows.native .card {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 12px 28px -6px rgba(0, 0, 0, 0.55),
+    0 2px 8px -2px rgba(0, 0, 0, 0.4);
+}
+html.windows body { font-family: 'Segoe UI Variable Text', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif; }
+
+/* Slides in from the taskbar's side, like the flyouts Windows opens from it. */
+html.windows .card.enter { animation: flyout-in 260ms cubic-bezier(0.1, 0.9, 0.2, 1) both; }
+html.windows { --from-x: 0px; --from-y: 28px; }
+html.windows[data-edge='top'] { --from-y: -28px; }
+html.windows[data-edge='left'] { --from-x: -28px; --from-y: 0px; }
+html.windows[data-edge='right'] { --from-x: 28px; --from-y: 0px; }
+@keyframes flyout-in {
+  from { opacity: 0; transform: translate(var(--from-x), var(--from-y)); }
+  to { opacity: 1; transform: none; }
+}
+html.windows.leaving .card { opacity: 0; transform: translate(calc(var(--from-x) / 3), calc(var(--from-y) / 3)); transition: opacity 110ms ease-in, transform 110ms ease-in; }
+@media (prefers-reduced-motion: reduce) {
+  html.windows .card.enter { animation: fade-in 120ms ease both; }
+  html.windows.leaving .card { transform: none; }
+}
+@keyframes fade-in { from { opacity: 0; } }
+
+/* Scrollbars that look at home on Windows' dark surfaces. */
+html.windows ::-webkit-scrollbar { width: 10px; height: 10px; }
+html.windows ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 8px; border: 3px solid transparent; background-clip: padding-box; }
+html.windows ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.28); }
+html.windows ::-webkit-scrollbar-track { background: transparent; }

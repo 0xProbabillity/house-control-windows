@@ -35,7 +35,7 @@ export function bootConsole(root) {
     h('div.orb-core', icon('sparkles', 30, 1.8)));
   const pill = h('div.pill');
   const primary = h('button.primary', { onclick: () => send(status.state === 'live' || status.state === 'starting' ? 'agent.stop' : 'agent.start', { reach: status.reach }) });
-  const reachSeg = segmented([['internet', 'globe', 'Over the internet'], ['local', 'laptop', 'This Mac only']],
+  const reachSeg = segmented([['internet', 'globe', 'Over the internet'], ['local', 'laptop', 'This PC only']],
     (v) => send('agent.settings', { reach: v }));
   const callout = h('div.callout');
   const hero = h('header.hero', orb,
@@ -74,10 +74,10 @@ export function bootConsole(root) {
   const footer = h('footer.privacy',
     h('div.privacy-title', icon('shield', 15), 'Private by design'),
     h('ul',
-      h('li', 'Runs on this Mac. No House Control server, no account, nothing stored anywhere else.'),
+      h('li', 'Runs on this PC. No House Control server, no account, nothing stored anywhere else.'),
       h('li', 'The link holds a 128-bit secret. Without it every address answers “not found”.'),
       h('li', 'Stop ends it at once — the address itself stops existing. Each start makes a new one.'),
-      h('li', 'Device IDs and sign-ins never leave the Mac. Cloudflare only relays the encrypted connection.')));
+      h('li', 'Device IDs and sign-ins never leave the PC. Cloudflare only relays the encrypted connection.')));
 
   const page = h('div.agent', hero, linkCard, connectCard, permsCard, activityCard, footer);
   root.replaceChildren(page);
@@ -228,7 +228,7 @@ export function bootConsole(root) {
       live: status.stopsAt ? `Live · ${left(status.stopsAt)}` : 'Live',
       error: 'Stopped', setup: 'One-time setup',
     }[s] || s;
-    pill.replaceChildren(h('i.dot'), h('span', label), ...(s === 'live' ? [h('span.pill-reach', status.reach === 'local' ? 'This Mac' : 'Internet')] : []));
+    pill.replaceChildren(h('i.dot'), h('span', label), ...(s === 'live' ? [h('span.pill-reach', status.reach === 'local' ? 'This PC' : 'Internet')] : []));
     primary.replaceChildren(...(s === 'live' ? [icon('stop', 15, 2.4), 'Stop AI Access'] : s === 'starting' ? [h('i.spinner'), 'Cancel'] : [icon('sparkles', 17, 2), 'Start AI Access']));
     primary.classList.toggle('stop', s === 'live' || s === 'starting');
     reachSeg.set(status.reach);
@@ -239,11 +239,11 @@ export function bootConsole(root) {
       callout.className = 'callout info';
       callout.replaceChildren(...[
         h('div.callout-title', icon('download', 15), 'Get Cloudflare’s tunnel once'),
-        h('p', 'Over the internet, your Mac is reached through Cloudflare’s free quick tunnel (', h('code.inline', 'cloudflared'), ', about 20 MB, from Cloudflare’s GitHub). No Cloudflare account is needed.'),
+        h('p', 'Over the internet, your PC is reached through Cloudflare’s free quick tunnel (', h('code.inline', 'cloudflared'), ', about 20 MB, from Cloudflare’s GitHub). No Cloudflare account is needed.'),
         t.error ? h('p.err', t.error) : null,
         h('div.callout-actions',
           h('button.primary.small', { disabled: t.downloading || null, onclick: () => send('agent.install') }, t.downloading ? [h('i.spinner'), 'Downloading…'] : [icon('download', 14), 'Download']),
-          h('button.ghost', { onclick: () => send('agent.start', { reach: 'local' }) }, 'Use this Mac only')),
+          h('button.ghost', { onclick: () => send('agent.start', { reach: 'local' }) }, 'Use this PC only')),
         h('p.muted', 'Or in Terminal: ', h('code.inline', 'brew install cloudflared'))].filter(Boolean));
     } else if (s === 'error') {
       callout.className = 'callout bad';
@@ -256,14 +256,14 @@ export function bootConsole(root) {
     linkCard.classList.toggle('hidden', s !== 'live');
     const local = status.reach === 'local';
     if (local !== shownLocal) {
-      // Assistants in the cloud cannot reach 127.0.0.1: on this Mac only, apps on the Mac are the audience.
+      // Assistants in the cloud cannot reach 127.0.0.1: on this PC only, apps on the PC are the audience.
       shownLocal = local;
       if (local && tab === 'chat') tab = 'code';
       if (!local && tab === 'code' && s !== 'live') tab = 'chat';
     }
     chatActions.firstChild.hidden = local;
     linkHint.replaceChildren(...(local
-      ? ['Only apps on this Mac can open it: Claude Code, Cursor, VS Code, LM Studio, your own scripts. See ', h('b', 'Code & agents'), ' below.']
+      ? ['Only apps on this PC can open it: Claude Code, Cursor, VS Code, LM Studio, your own scripts. See ', h('b', 'Code & agents'), ' below.']
       : ['Paste it into any assistant with your request — ', h('em', '“turn off every light except the bedroom”'), '.']));
     if (s === 'live') {
       try {

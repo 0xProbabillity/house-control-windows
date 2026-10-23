@@ -18,13 +18,13 @@ const tmp = new THREE.Color();
 const css = (c) => `#${c.getHexString()}`;
 const PEEK_MS = 2400;
 
-export async function bootIsland(root) {
+export async function bootIsland(root, { desk = false } = {}) {
   const boot = window.__HOUSE_BOOT__?.island || {};
   const query = new URLSearchParams(location.search);
   // The notch this island grows out of, in points. A screen without one gets a drawn tab.
   const notch = {
     w: boot.notchWidth ?? (Number(query.get('notch')) || 190),
-    h: boot.notchHeight ?? 34,
+    h: boot.notchHeight ?? (Number(query.get('notchHeight')) || 30),
     real: boot.hasNotch ?? false,
   };
 
@@ -57,6 +57,11 @@ export async function bootIsland(root) {
   const isle = h('div.isle', h('div.isle-glow'), shape);
   isle.dataset.state = 'collapsed';
   isle.classList.toggle('real', notch.real);
+  // At rest on Windows: a tab with what is on, or only a slim line until the pointer comes.
+  isle.classList.toggle('slim', (boot.rest || query.get('rest')) === 'slim');
+  // The desktop widget: the open island as a card that stays open, moved by its title.
+  isle.classList.toggle('desk', desk);
+  const peeks = boot.peek !== false;
   isle.style.setProperty('--notch-w', `${notch.w}px`);
   isle.style.setProperty('--notch-h', `${notch.h}px`);
   root.replaceChildren(isle);
@@ -260,7 +265,7 @@ export async function bootIsland(root) {
 
   // Says what just changed somewhere else, unless the island is open (then you see it anyway).
   function announce(before, source) {
-    if (isle.dataset.state === 'expanded') return;
+    if (isle.dataset.state === 'expanded' || !peeks) return;
     const news = describe(before, source);
     if (!news) return;
     peek = news;
@@ -323,9 +328,21 @@ export async function bootIsland(root) {
 
   body.inert = true;
   update();
-  if (window.__HOUSE_BOOT__?.island?.expanded || query.get('expanded')) setState('expanded');
+  if (desk) {
+    let locked = Boolean(boot.locked);
+    const head = body.querySelector('.isle-head');
+    const grab = () => head.classList.toggle('grab', !locked);
+    grab();
+    incoming.setLocked = (on) => { locked = Boolean(on); grab(); };
+    // Dragging the title moves the widget: the native window takes over the drag.
+    head.addEventListener('pointerdown', (ev) => {
+      if (ev.button !== 0 || locked || ev.target.closest('button')) return;
+      post('widget.drag');
+    });
+    setState('expanded');
+  } else if (window.__HOUSE_BOOT__?.island?.expanded || query.get('expanded')) setState('expanded');
   // Without the native shell (vite dev) the pointer drives it, so the page can be worked on.
-  if (!isNative) {
+  if (!isNative && !desk) {
     shape.addEventListener('pointerenter', () => setState('expanded'));
     shape.addEventListener('pointerleave', () => setState('collapsed'));
   }
