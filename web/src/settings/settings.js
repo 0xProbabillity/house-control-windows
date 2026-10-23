@@ -69,6 +69,15 @@ export function bootSettings(root) {
     return el;
   }
 
+  // A slider that says its value and only reports it once the thumb is let go.
+  function range(value, min, max, step, onChange, label) {
+    const out = h('span.s-range-value', `${value}%`);
+    const input = h('input.s-range', { type: 'range', min, max, step, value, 'aria-label': label });
+    input.addEventListener('input', () => { out.textContent = `${input.value}%`; });
+    input.addEventListener('change', () => onChange(Number(input.value)));
+    return h('div.s-inline', input, out);
+  }
+
   function row(iconName, title, detail, control, extra) {
     return h('div.s-row', iconName ? h('span.s-row-icon', icon(iconName, 18)) : null,
       h('div.s-row-text', h('div.s-row-title', title), detail ? h('div.s-row-detail', detail) : null),
@@ -138,6 +147,10 @@ export function bootSettings(root) {
         group(
           row('fit', 'At rest', 'A tab with how many lights are on, or only a thin line until the pointer comes.',
             choice(state.islandRest, [['tab', 'Tab'], ['slim', 'Slim line']], (v) => set('islandRest', v), 'At rest')),
+          row('fit', 'Width', 'Compact is only as wide as what it shows; Wide matches a MacBook’s notch.',
+            choice(state.islandWidth || 'compact', [['compact', 'Compact'], ['medium', 'Medium'], ['wide', 'Wide']], (v) => set('islandWidth', v), 'Width')),
+          row('dim', 'Opacity', 'How solid its black is while it rests or peeks, so you can see what is under it.',
+            range(state.islandOpacity ?? 80, 20, 100, 5, (v) => set('islandOpacity', v), 'Opacity')),
           row('clock', 'Opens after', 'How long the pointer rests on it first, so passing by does nothing.',
             choice(String(delayBucket(state.islandDelay)), [['120', 'Quickly'], ['220', 'Normal'], ['450', 'Slowly']],
               (v) => set('islandDelay', Number(v)), 'Opens after')),
@@ -263,7 +276,7 @@ function describeKeys(ev) {
 function sample() {
   return {
     version: '1.0.0', startWithWindows: 'on', hotkeyEnabled: true, hotkeyText: 'Ctrl+Alt+H', hotkeyProblem: '', trayBadge: true,
-    islandEnabled: true, islandRest: 'tab', islandDelay: 220, islandPeek: true, islandHideInFullscreen: true, islandDisplay: '',
+    islandEnabled: true, islandRest: 'tab', islandWidth: 'compact', islandOpacity: 80, islandDelay: 220, islandPeek: true, islandHideInFullscreen: true, islandDisplay: '',
     displays: [{ id: '', name: 'Display 1 (main) · 1920×1080' }, { id: 'B', name: 'Display 2 · 2560×1440' }],
     widgetEnabled: false, widgetLocked: false,
     plans: [{ id: 'home', name: 'Demo · Apartment' }, { id: 'studio', name: 'Demo · Studio' }], activePlan: 'home',

@@ -89,3 +89,6 @@ html.mode-settings body { font-family: 'Segoe UI Variable Text', 'Segoe UI Varia
   .s-nav-item span, .s-brand div { display: none; }
   .s-content { padding: 20px; }
 }
+
+.s-range { width: 180px; accent-color: var(--accent); }
+.s-range-value { min-width: 40px; text-align: right; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }

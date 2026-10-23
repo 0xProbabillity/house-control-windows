@@ -64,6 +64,9 @@ export async function bootIsland(root, { desk = false } = {}) {
   const peeks = boot.peek !== false;
   isle.style.setProperty('--notch-w', `${notch.w}px`);
   isle.style.setProperty('--notch-h', `${notch.h}px`);
+  // How see-through the black of the tab is while it rests or peeks (Settings → Island).
+  const opacity = Number(boot.opacity ?? query.get('opacity')) || 100;
+  isle.style.setProperty('--rest-alpha', String(Math.min(100, Math.max(20, opacity)) / 100));
   root.replaceChildren(isle);
 
   /* ---------- scenes ---------- */

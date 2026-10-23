@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Text.Json.Nodes;
 using HouseControl.Core;
 using HouseControl.Web;
@@ -18,7 +18,7 @@ internal sealed class IslandWindow : OverlayWindow
 {
     // Must match island.css: the open island, and the transparent room around it for its shadow.
     private const int OpenWidth = 664, OpenHeight = 292, CanvasWidth = 820, CanvasHeight = 470;
-    private const int TabWidth = 190, Ear = 64;
+    private const int Ear = 64;
 
     private readonly AppSettings _settings;
     private readonly System.Windows.Forms.Timer _pointer = new() { Interval = 40 };
@@ -38,6 +38,12 @@ internal sealed class IslandWindow : OverlayWindow
 
     protected override bool ActivatesOnClick => false;
 
+    /// <summary>
+    /// The middle of the tab, between the two ears that show what is on. There is no notch to
+    /// match on a PC, so by default it is only a sliver.
+    /// </summary>
+    private int TabWidth => _settings.IslandWidth switch { "wide" => 190, "medium" => 100, _ => 24 };
+
     /// <summary>The tab's height: a title bar's, so it lines up with the windows under it.</summary>
     public int TabHeight => _settings.IslandRest == "slim" ? 6 : 30;
 
@@ -49,6 +55,7 @@ internal sealed class IslandWindow : OverlayWindow
         ["hasNotch"] = false,
         ["rest"] = _settings.IslandRest,
         ["peek"] = _settings.IslandPeek,
+        ["opacity"] = _settings.IslandOpacity,
         ["expanded"] = Environment.GetEnvironmentVariable("HOUSE_ISLAND_EXPANDED") is { Length: > 0 },
     };
 

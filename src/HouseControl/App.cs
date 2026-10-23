@@ -575,7 +575,7 @@ internal sealed partial class App : ApplicationContext
             case "islandEnabled":
                 if (IslandWanted) ShowIsland(); else _island?.Hide();
                 break;
-            case "islandRest" or "islandDisplay" or "islandPeek":
+            case "islandRest" or "islandDisplay" or "islandPeek" or "islandWidth" or "islandOpacity":
                 if (_island != null)
                 {
                     _island.Place();

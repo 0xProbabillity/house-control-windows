@@ -22,6 +22,10 @@ internal sealed class AppSettings
     public bool IslandPeek { get; set; } = true;
     /// <summary>Step aside while a full-screen app, a game or a presentation is in front.</summary>
     public bool IslandHideInFullscreen { get; set; } = true;
+    /// <summary>"compact" (as wide as what it shows), "medium" or "wide" (the width of a MacBook's notch).</summary>
+    public string IslandWidth { get; set; } = "compact";
+    /// <summary>How opaque the tab's black is at rest and while peeking, in percent (20…100).</summary>
+    public int IslandOpacity { get; set; } = 80;
     /// <summary>The display's device name ("\\.\DISPLAY2"); empty for the primary display.</summary>
     public string IslandDisplay { get; set; } = "";
 
@@ -56,6 +60,8 @@ internal sealed class AppSettings
         IslandPeek = json.Bool("islandPeek") ?? IslandPeek;
         IslandHideInFullscreen = json.Bool("islandHideInFullscreen") ?? IslandHideInFullscreen;
         IslandDisplay = json.Str("islandDisplay") ?? "";
+        IslandWidth = json.Str("islandWidth") is "medium" or "wide" ? json.Str("islandWidth")! : "compact";
+        IslandOpacity = Math.Clamp((int)(json.Num("islandOpacity") ?? IslandOpacity), 20, 100);
         WidgetEnabled = json.Bool("widgetEnabled") ?? WidgetEnabled;
         WidgetLocked = json.Bool("widgetLocked") ?? WidgetLocked;
         if (json.Num("widgetX") is { } x && json.Num("widgetY") is { } y) WidgetPosition = new Point((int)x, (int)y);
@@ -75,6 +81,8 @@ internal sealed class AppSettings
             ["islandPeek"] = IslandPeek,
             ["islandHideInFullscreen"] = IslandHideInFullscreen,
             ["islandDisplay"] = IslandDisplay,
+            ["islandWidth"] = IslandWidth,
+            ["islandOpacity"] = IslandOpacity,
             ["widgetEnabled"] = WidgetEnabled,
             ["widgetLocked"] = WidgetLocked,
             ["hotkeyEnabled"] = HotkeyEnabled,
@@ -105,6 +113,8 @@ internal sealed class AppSettings
             case "islandPeek": IslandPeek = B(); break;
             case "islandHideInFullscreen": IslandHideInFullscreen = B(); break;
             case "islandDisplay": IslandDisplay = value?.GetValue<string>() ?? ""; break;
+            case "islandWidth": IslandWidth = value?.GetValue<string>() is "medium" or "wide" ? value.GetValue<string>() : "compact"; break;
+            case "islandOpacity": IslandOpacity = Math.Clamp((int)value!.GetValue<double>(), 20, 100); break;
             case "widgetEnabled": WidgetEnabled = B(); break;
             case "widgetLocked": WidgetLocked = B(); break;
             case "hotkeyEnabled": HotkeyEnabled = B(); break;

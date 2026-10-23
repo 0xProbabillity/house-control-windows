@@ -298,3 +298,12 @@ html.windows .isle { font-family: 'Segoe UI Variable Text', 'Segoe UI Variable',
 .isle.desk .isle-head.grab { cursor: grab; }
 .isle.desk .isle-head.grab:active { cursor: grabbing; }
 .isle.desk .reveal { transition-delay: 0ms !important; }
+/* Without a real notch the middle of the tab is only black: Windows keeps it as wide as the
+   app asks (Settings → Island → Width), never narrower than its own content. At rest and
+   while peeking its black can be see-through (--rest-alpha, Settings → Island → Opacity). */
+html.windows .isle.quiet[data-state='collapsed'] { --w: max(96px, var(--notch-w)); }
+html.windows .isle:not([data-state='expanded']) .isle-shape {
+  background: rgba(0, 0, 0, var(--rest-alpha, 1));
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, calc((1 - var(--rest-alpha, 1)) * 0.5));
+}
+html.windows .isle .isle-shape { transition-property: width, height, border-radius, background-color; }
