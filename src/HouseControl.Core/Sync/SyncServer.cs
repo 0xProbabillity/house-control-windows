@@ -324,10 +324,14 @@ public sealed class SyncServer : IDisposable
         protected override int[] GetSupportedCipherSuites() => [CipherSuite.TLS_PSK_WITH_AES_128_GCM_SHA256];
     }
 
-    /// <summary>The phone names itself "housecontrol"; whatever it says, only the right key completes the handshake.</summary>
+    /// <summary>
+    /// The identity hint "housecontrol", as the Mac's server sends it: Apple's TLS on the iPhone picks
+    /// the pre-shared key by it and refuses a handshake without it. Whatever identity the phone
+    /// answers with, only the right key completes the handshake.
+    /// </summary>
     private sealed class Identities(byte[] psk) : TlsPskIdentityManager
     {
-        public byte[]? GetHint() => null;
+        public byte[]? GetHint() => "housecontrol"u8.ToArray();
         // A copy every time: BouncyCastle wipes the key it was given once the handshake is done.
         public byte[] GetPsk(byte[] identity) => (byte[])psk.Clone();
     }
