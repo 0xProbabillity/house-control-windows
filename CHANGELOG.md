@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2 — 2026-10-23
+
+- **The iPhone completes the handshake.** The PC now sends the pre-shared key's identity hint, as a Mac does;
+  without it the iPhone app's encrypted connection stopped with `decode_error`.
+- **A VPN no longer hides the PC.** With NordVPN or another VPN connected, the PC announced its tunnel address,
+  which a phone on the Wi-Fi cannot reach. The Wi-Fi or wired address now always comes first.
+
 ## 1.1.1 — 2026-10-23
 
 - **Pair iPhone tells you what is in the way.** When Windows treats your Wi-Fi as a public network, the window says
