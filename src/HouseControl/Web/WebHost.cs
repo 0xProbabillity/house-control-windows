@@ -54,8 +54,12 @@ internal sealed class WebHost
             var options = new CoreWebView2EnvironmentOptions
             {
                 // Nothing here is a web page from the internet: no SmartScreen lookups, no
-                // "translate this page", no autofill.
-                AdditionalBrowserArguments = "--disable-features=msSmartScreenProtection,Translate,AutofillServerCommunication",
+                // "translate this page", no autofill. The hidden panel still sends device commands
+                // and runs what the tray, the jump list and AI Access ask for, so its timers must
+                // not be slowed to once a minute the way a background tab's are; drawing stops
+                // anyway while a view is hidden.
+                AdditionalBrowserArguments = "--disable-features=msSmartScreenProtection,Translate,AutofillServerCommunication,IntensiveWakeUpThrottling "
+                    + "--disable-background-timer-throttling",
             };
             _environment = await CoreWebView2Environment.CreateAsync(null, data, options);
             return _environment;

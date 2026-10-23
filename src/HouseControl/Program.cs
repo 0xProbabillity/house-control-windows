@@ -25,6 +25,8 @@ internal static class Program
             SingleInstance.Forward(args);
             return 0;
         }
+        // The installer asks a running copy to quit; with none running there is nothing to do.
+        if (args.FirstOrDefault() == "--quit") return 0;
 
         // Everything awaited from here on comes back to this (STA, UI) thread: WebView2 and the
         // device clients count on it. No Control exists yet to install it by itself.
