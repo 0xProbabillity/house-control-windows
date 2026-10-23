@@ -62,11 +62,22 @@ public class SyncTests
         private readonly TlsClientProtocol _tls;
         public Stream Stream => _tls.Stream;
 
-        public Phone(int port, byte[] psk)
+        public Phone(int port, byte[] psk, bool android = false)
         {
             var socket = new TcpClient("127.0.0.1", port);
             _tls = new TlsClientProtocol(socket.GetStream());
-            _tls.Connect(new Client(psk));
+            _tls.Connect(android ? new AndroidClient(psk) : new Client(psk));
+        }
+
+        /// <summary>
+        /// What the Android app offers (its SyncTransport.connect): BouncyCastle's PSK client with the
+        /// one cipher suite, TLS 1.2 only, identity "housecontrol".
+        /// </summary>
+        private sealed class AndroidClient(byte[] psk) : PskTlsClient(new BcTlsCrypto(new SecureRandom()),
+            new BasicTlsPskIdentity(Encoding.UTF8.GetBytes("housecontrol"), psk))
+        {
+            protected override ProtocolVersion[] GetSupportedVersions() => ProtocolVersion.TLSv12.Only();
+            protected override int[] GetSupportedCipherSuites() => [CipherSuite.TLS_PSK_WITH_AES_128_GCM_SHA256];
         }
 
         public void Send(JsonObject message)
@@ -145,6 +156,19 @@ public class SyncTests
         // Saying hello with the revision it already has: no plan this time.
         phone.Send(new JsonObject { ["type"] = "hello", ["device"] = "Test iPhone", ["rev"] = PlanStore.Revision(plan) });
         Assert.Null(phone.Receive()["plan"]);
+    }
+
+    [Fact]
+    public void AnAndroidPhoneConnectsToo()
+    {
+        var plan = Encoding.UTF8.GetBytes("{\"rooms\":[]}");
+        var (server, pairing) = StartServer(() => new SyncState("Test PC", PlanStore.Revision(plan), plan, "", false, null));
+        using var _ = server;
+        using var phone = new Phone(server.Port!.Value, pairing.PreSharedKey, android: true);
+        phone.Send(new JsonObject { ["type"] = "hello", ["device"] = "Android", ["rev"] = "" });
+        var state = phone.Receive();
+        Assert.Equal("state", state.Str("type"));
+        Assert.Equal("{\"rooms\":[]}", state.Str("plan"));
     }
 
     [Fact]
