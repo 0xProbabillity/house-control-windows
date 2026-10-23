@@ -11,7 +11,14 @@ namespace HouseControl.Shell;
 /// </summary>
 internal sealed class SingleInstance : NativeWindow, IDisposable
 {
-    private const string WindowTitle = "HouseControl.Instance.7f3c";
+    /// <summary>
+    /// A copy with its own data folder (HOUSE_DATA_DIR: tests, screenshots) is an instance of its own,
+    /// so it never hands its arguments — or a --quit — to the copy you use every day.
+    /// </summary>
+    private static readonly string Scope = Environment.GetEnvironmentVariable("HOUSE_DATA_DIR") is { Length: > 0 } dir
+        ? "." + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(dir).ToLowerInvariant())))[..12]
+        : "";
+    private static readonly string WindowTitle = "HouseControl.Instance.7f3c" + Scope;
     private const int CopyDataTag = 0x48434C31; // "HCL1"
     private readonly Mutex _mutex;
 
@@ -20,7 +27,7 @@ internal sealed class SingleInstance : NativeWindow, IDisposable
 
     public SingleInstance()
     {
-        _mutex = new Mutex(true, $@"Local\HouseControl.{Environment.UserName}", out var created);
+        _mutex = new Mutex(true, $@"Local\HouseControl.{Environment.UserName}{Scope}", out var created);
         IsFirst = created;
         if (IsFirst) CreateHandle(new CreateParams { Caption = WindowTitle });
     }
