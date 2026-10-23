@@ -63,6 +63,8 @@ jobs:
           $text = Get-Content CHANGELOG.md -Raw
           $match = [regex]::Match($text, "(?ms)^## $([regex]::Escape($version))\b[^\n]*\n(.*?)(?=^## |\z)")
           $notes = if ($match.Success) { $match.Groups[1].Value.Trim() } else { "House Control $version for Windows." }
+          # GitHub shows every line break of release notes: join the lines CHANGELOG.md wraps.
+          $notes = [regex]::Replace($notes, "\r?\n[ ]{2,}", " ")
           Set-Content -Path release-notes.md -Value $notes -Encoding utf8
 
       - uses: actions/upload-artifact@v4
