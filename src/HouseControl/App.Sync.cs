@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using HouseControl.Core;
 using HouseControl.Core.SmartLife;
 using HouseControl.Core.Sync;
+using HouseControl.Shell;
 using HouseControl.Web;
 using HouseControl.Windows;
 
@@ -65,6 +66,7 @@ internal sealed partial class App
             RefreshSettings();
         };
         _sync.ShowQr += ShowLoginCode;
+        _sync.Diagnostic += Log.Write;
         _sync.Start(); // only listens once a phone has been paired
         // A new Wi-Fi, a cable plugged in, waking up: announce this PC on the network it is on now.
         NetworkChange.NetworkAddressChanged += (_, _) => _instanceContext?.Post(_ => Advertise(), null);
@@ -77,7 +79,10 @@ internal sealed partial class App
     private void Advertise()
     {
         if (_sync.Pairing is { } pairing && _sync.Port is { } port)
-            _advertiser.Advertise(pairing.Name, port, new Dictionary<string, string> { ["id"] = pairing.Id });
+        {
+            var ok = _advertiser.Advertise(pairing.Name, port, new Dictionary<string, string> { ["id"] = pairing.Id });
+            Log.Write($"sync: announced as {pairing.Name} on port {port} at {MdnsAdvertiser.PreferredAddress()}: {(ok ? "ok" : $"failed ({MdnsAdvertiser.LastStatus})")}");
+        }
         else
             _advertiser.Withdraw();
     }
@@ -122,7 +127,16 @@ internal sealed partial class App
         {
             var host = Attach(new WebHost("pairing", () => new JsonObject { ["qr"] = PairingView() }));
             _pairingWindow = new PageWindow(host, "Pair iPhone", new Size(460, 700), new Size(400, 560), _windows, "pairing");
-            _pairingWindow.FormClosed += (_, _) => _pairingWindow = null;
+            // Re-checks the network and the firewall while the window is open: making the network
+            // private in Settings changes nothing the app is told about.
+            var recheck = new System.Windows.Forms.Timer { Interval = 3000 };
+            recheck.Tick += (_, _) => RefreshPairingWindow();
+            recheck.Start();
+            _pairingWindow.FormClosed += (_, _) =>
+            {
+                recheck.Dispose();
+                _pairingWindow = null;
+            };
             _ = Start(_pairingWindow.InitializeAsync(), "pairing");
         }
         _pairingWindow.Present();
@@ -134,9 +148,26 @@ internal sealed partial class App
         var devices = _sync.ConnectedDevices;
         string status;
         var active = devices.Count > 0;
+        // What would keep a phone out, checked each time the window is drawn: the phone finds this
+        // PC either way, but Windows drops its connection.
+        var publicNetworks = active ? Array.Empty<string>() : NetworkCheck.PublicNetworks();
+        var firewallBlocks = !active && !NetworkCheck.FirewallAllows();
+        var fixes = new JsonArray();
         if (active) status = $"Connected: {string.Join(", ", devices)}";
         else if (!MdnsAdvertiser.IsSupported) status = "This version of Windows cannot announce the PC on the network. Update Windows 10 to 1809 or newer.";
+        else if (publicNetworks.Count > 0)
+        {
+            status = $"Windows treats “{publicNetworks[0]}” as a public network, so the iPhone cannot reach this PC. Make it a private network.";
+            fixes.Add(new JsonObject { ["label"] = "Open Network Settings", ["action"] = "pairing.network", ["primary"] = true });
+        }
+        else if (firewallBlocks)
+        {
+            status = "Windows Firewall does not let the iPhone connect to House Control yet.";
+            fixes.Add(new JsonObject { ["label"] = "Allow in Firewall…", ["action"] = "pairing.firewall", ["primary"] = true });
+        }
         else status = "Waiting for an iPhone…";
+        fixes.Add(new JsonObject { ["label"] = "Copy Pairing Link", ["action"] = "pairing.copy" });
+        fixes.Add(new JsonObject { ["label"] = "Reset Pairing…", ["action"] = "pairing.reset" });
         return new JsonObject
         {
             ["qr"] = _sync.Pairing is { } pairing ? QrPng.DataUrl(pairing.Link) : null,
@@ -148,9 +179,7 @@ internal sealed partial class App
                 "Both devices on the same Wi-Fi (or this PC on the same router by cable).",
                 "If Windows asks whether House Control may use private networks, allow it.",
                 "On the iPhone, allow House Control to use the local network when it asks."),
-            ["buttons"] = new JsonArray(
-                new JsonObject { ["label"] = "Copy Pairing Link", ["action"] = "pairing.copy" },
-                new JsonObject { ["label"] = "Reset Pairing…", ["action"] = "pairing.reset" }),
+            ["buttons"] = fixes,
             ["note"] = "Your floor plan, device links and Home Assistant and Hue connections stay the same on both, whichever one you edit. "
                 + "They travel straight between them, encrypted with the key in this code; nothing goes through a server.",
         };
@@ -174,6 +203,14 @@ internal sealed partial class App
                     Advertise();
                     RefreshPairingWindow();
                 }
+                return true;
+            case "pairing.network":
+                NetworkCheck.OpenNetworkSettings();
+                return true;
+            case "pairing.firewall":
+                // Windows asks for an administrator's OK; only then is the rule added.
+                NetworkCheck.AllowThroughFirewall();
+                RefreshPairingWindow();
                 return true;
             case "pairPhone":
                 PairPhone();

@@ -12,8 +12,8 @@ html.mode-pairing body { font-family: 'Segoe UI Variable Text', 'Segoe UI Variab
 @keyframes q-spin { to { transform: rotate(360deg); } }
 .q-app h1 { margin: 10px 0 0; font-size: 19px; font-weight: 600; }
 .q-detail { margin: 0; color: var(--muted); line-height: 1.5; max-width: 380px; }
-.q-status { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); color: var(--muted); font-size: 13px; }
-.q-status i { width: 8px; height: 8px; border-radius: 50%; background: #f5b04c; box-shadow: 0 0 8px #f5b04c; }
+.q-status { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 14px; max-width: 380px; text-align: left; background: rgba(255, 255, 255, 0.06); color: var(--muted); font-size: 13px; }
+.q-status i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #f5b04c; box-shadow: 0 0 8px #f5b04c; }
 .q-status.on i { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
 .q-status.on { color: var(--text); }
 .q-steps { margin: 4px 0 0; padding-left: 20px; text-align: left; color: var(--muted); line-height: 1.7; max-width: 360px; }

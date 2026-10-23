@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1 — 2026-10-23
+
+- **Pair iPhone tells you what is in the way.** When Windows treats your Wi-Fi as a public network, the window says
+  so and opens the setting that makes it private; when the firewall has no rule for House Control, **Allow in
+  Firewall…** adds one for private networks after Windows' administrator prompt. It checks again by itself.
+- Every connection a phone makes, and why one did not get through, is written to the app's log.
+- A test of the sync server no longer fails now and then on GitHub's build machines.
+
 ## 1.1.0 — 2026-10-23
 
 - **Sync with the iPhone app.** Pair House Control on your iPhone with your PC — tray icon → **Pair iPhone…** — and
