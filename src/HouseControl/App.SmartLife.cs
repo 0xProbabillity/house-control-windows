@@ -16,7 +16,10 @@ internal sealed partial class App
     private void AddSmartLife(JsonObject boot)
     {
         boot["tuya"] = _smartLife.TuyaInfo;
-        boot["smartLife"] = _smartLife.SmartLifeInfo;
+        var account = _smartLife.SmartLifeInfo;
+        // Not signed in here yet: offer the User Code a paired iPhone signed in with.
+        if (!_smartLife.IsSmartLifeConnected && _phoneUserCode.Length > 0) account["userCode"] = _phoneUserCode;
+        boot["smartLife"] = account;
     }
 
     private bool HandleSmartLife(WebHost host, JsonObject message, string type)

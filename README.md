@@ -38,6 +38,8 @@
 - **AI Access.** Give ChatGPT, Claude or any AI assistant a private link — or connect it over MCP — and it runs your
   lights and air conditioners, and rebuilds rooms in the 3D model from your photos. Served by your PC; Stop ends it.
   See [AI Access](#ai-access).
+- **Your iPhone in step.** Pair the House Control iPhone app with your PC and the floor plan, the device links and
+  the Home Assistant and Hue connections stay the same on both. See [iPhone app](#iphone-app).
 - **Works without any hardware.** Until you sign in, every device is simulated, so you can try everything first.
 
 It is a small native shell in C# (.NET 8, Win32 and WinForms) around the same [Three.js](https://threejs.org) web UI
@@ -151,6 +153,29 @@ title to move it; it remembers where it was put. **Lock its position** keeps it 
 
 It draws only when something changes, so it costs nothing while you work.
 
+## iPhone app
+
+The [House Control iPhone app](https://github.com/0xProbabillity/house-control#iphone-app) pairs with a PC exactly as
+it pairs with a Mac:
+
+1. On the PC: right-click the tray icon → **Pair iPhone…** (or **Settings → iPhone → Pair…**). A QR code appears.
+2. On the iPhone: **Settings → Pair with Mac**, and point the camera at the code. Or press **Copy Pairing Link** on
+   the PC and paste it on the phone.
+
+From then on, whenever both are on the same network and the app is open on the phone, a plan saved on one reaches
+the other a moment later, whichever one you edit; a home set up on the phone first comes to the PC when you pair
+them. The Home Assistant and Hue connections travel too (the newer side wins), the phone sends its Apple Home
+devices so you can link them in the editor, and when the phone signs in to Smart Life it can show its sign-in code
+on the PC's screen.
+
+The two talk directly: the PC announces itself on the network with multicast DNS (as a Mac does with Bonjour), and
+the connection is TLS with a pre-shared key that only the QR code carries, so a device that never saw the code
+cannot connect. **Reset Pairing…** issues a new key.
+
+The first time, Windows asks whether House Control may use the network: allow it. If your Wi-Fi is set as a
+**public** network in Windows, the phone cannot reach the PC — switch it to **private** (Settings → Network &
+internet → Wi-Fi → your network → **Private network**), which is what it is at home anyway.
+
 ## Settings
 
 <p align="center">
@@ -158,8 +183,8 @@ It draws only when something changes, so it costs nothing while you work.
 </p>
 
 **Settings…** in the tray icon's menu (or `Ctrl+,` in the panel) has everything in one place: Start with Windows,
-the keyboard shortcut (click it and press a new one), the tray badge, the island, the desktop widget, your floor
-plans, the connections, AI Access and a list of every shortcut.
+the keyboard shortcut (click it and press a new one), the tray badge, the island (its width and how see-through it
+is), the desktop widget, your floor plans, the connections, iPhone pairing, AI Access and a list of every shortcut.
 
 **Start with Windows** adds House Control to your account's startup apps; Task Manager's **Startup apps** tab can
 switch it off too, and Settings shows when it has.
@@ -232,6 +257,8 @@ Everything personal stays in `%APPDATA%\HouseControl\` on your PC:
 | `events.log` | Commands sent to real devices and the cloud's answers. No tokens |
 | `app.log` | The app's own diagnostics, such as script errors. No tokens |
 | `agent.json`, `bin\cloudflared.exe` | AI Access settings, and Cloudflare's connector if you let the app download it |
+| `sync.json` | The key your paired iPhones use. Only there once you paired one. Encrypted |
+| `homekit-devices.json`, `connections-sync.json` | The Apple Home devices your iPhone listed for the editor (names and ids); when each shared connection last changed |
 
 The web views keep their own small profile (window state, the last panel state) in `%LOCALAPPDATA%\HouseControl\WebView2`.
 None of these are part of this repository, and the build does not embed them in the app.
@@ -310,6 +337,8 @@ Environment variables understood by the app:
 | `HOUSE_ISLAND=0` | Run without the island (`1` forces it on) |
 | `HOUSE_ISLAND_EXPANDED=1` | Keep the island open |
 | `HOUSE_SNAPSHOT_DIR=C:\some\folder` | Write `panel.png`, `island.png`, `widget.png`, `settings.png` and `editor.png` there a few seconds after launch (`HOUSE_SNAPSHOT_DELAY` seconds, 6 by default) |
+| `HOUSE_OPEN_PAIRING=1` | Open the Pair iPhone window at launch |
+| `HOUSE_COMPUTER_NAME="Studio PC"` | The name paired iPhones see, instead of the PC's own |
 | `HOUSE_OPEN_AGENT=1` | Open the AI Access window at launch (`start` also starts the link) |
 | `HOUSE_AGENT_REACH=local` | Serve AI Access on this PC only for one run (`internet` for the tunnel) |
 | `HOUSE_AGENT_LINK_FILE=C:\some\file` | Write the live AI Access link there, for scripted tests |
@@ -348,8 +377,7 @@ git tag v1.0.0; git push origin v1.0.0
 
 ## Limitations
 
-- The Windows app does not pair with the iPhone app yet: that sync runs over Apple's Bonjour and TLS with a
-  pre-shared key. Floor plan files move freely between the apps.
+- The PC and the iPhone sync only while both are on the same network; there is no cloud in between.
 - Apple Home accessories are reached through Home Assistant only (Apple keeps HomeKit to its own devices).
 - The Windows 11 Widgets board takes widgets only from apps installed from the Microsoft Store, so House Control's
   widget lives on the desktop instead.

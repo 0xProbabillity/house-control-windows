@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using HouseControl.Core;
 using HouseControl.Core.Discovery;
 using HouseControl.Core.HomeAssistant;
+using HouseControl.Core.Sync;
 using HouseControl.Web;
 
 namespace HouseControl;
@@ -19,7 +20,9 @@ internal sealed partial class App
     {
         _homeAssistant = new HomeAssistantService(Vault("homeassistant"));
         _hue = new HueService(Vault("hue"));
-        return new DeviceHub(_plans.Directory, [_homeAssistant, _hue], CreateCloud());
+        // Apple Home is the catalog a paired iPhone sends: linkable here, switched from the phone.
+        _homeKit = new RemoteCatalogService("homekit", "Apple Home", Path.Combine(_plans.Directory, "homekit-devices.json"));
+        return new DeviceHub(_plans.Directory, [_homeAssistant, _hue, _homeKit], CreateCloud());
     }
 
     /// <summary>What the editor needs to show the connections (never a token).</summary>
@@ -73,6 +76,7 @@ internal sealed partial class App
     private async Task<JsonObject> ConnectHomeAssistant(string url, string token)
     {
         await _homeAssistant.ConnectAsync(url, token);
+        _hub.MarkChanged("homeassistant");
         ConnectionsChanged();
         return _hub.ServicesInfo;
     }
@@ -87,6 +91,7 @@ internal sealed partial class App
         {
             return new JsonObject { ["waiting"] = true };
         }
+        _hub.MarkChanged("hue");
         ConnectionsChanged();
         return _hub.ServicesInfo;
     }

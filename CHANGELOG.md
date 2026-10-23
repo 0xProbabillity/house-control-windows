@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 — 2026-10-23
+
+- **Sync with the iPhone app.** Pair House Control on your iPhone with your PC — tray icon → **Pair iPhone…** — and
+  the floor plan, the device links and the Home Assistant and Hue connections stay the same on both, whichever one
+  you edit. The iPhone sees the PC just like a Mac: no change to the iPhone app is needed. The phone's Apple Home
+  devices can be linked in the editor, and its Smart Life sign-in code can be shown on the PC's screen.
+- **A compact island.** Without a notch to match, the tab at the top of the screen is now only as wide as what it
+  shows, and 20% see-through at rest. **Settings → Island** has its width (Compact, Medium, Wide) and opacity.
+- The README's icon is the icon again.
+
 ## 1.0.0 — 2026-10-23
 
 House Control comes to Windows: your home as a live 3D model, a click away in the taskbar.

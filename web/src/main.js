@@ -1,4 +1,4 @@
-﻿import { loadRawConfig, normalize, isLinked } from './config.js';
+import { loadRawConfig, normalize, isLinked } from './config.js';
 import { createStore } from './store.js';
 import { createWorld } from './three/world.js';
 import { createPanel } from './ui/panel.js';
@@ -248,6 +248,9 @@ if (mode === 'editor') {
   import('./editor/editor.js').then((m) => m.bootEditor(app)).catch((e) => fatal('Editor failed to start', e));
 } else if (mode === 'agent') {
   import('./agent/console.js').then((m) => m.bootConsole(app)).catch((e) => fatal('AI Access failed to start', e));
+} else if (mode === 'pairing') {
+  document.documentElement.classList.add('mode-pairing');
+  import('./pairing/pairing.js').then((m) => m.bootPairing(app)).catch((e) => fatal('Pairing failed to start', e));
 } else if (mode === 'settings') {
   document.documentElement.classList.add('mode-settings');
   import('./settings/settings.js').then((m) => m.bootSettings(app)).catch((e) => fatal('Settings failed to start', e));

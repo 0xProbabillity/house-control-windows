@@ -12,6 +12,7 @@ const PANES = [
   { id: 'widget', name: 'Desktop widget', icon: 'laptop' },
   { id: 'home', name: 'Home', icon: 'home' },
   { id: 'connections', name: 'Connections', icon: 'link' },
+  { id: 'iphone', name: 'iPhone', icon: 'phone' },
   { id: 'ai', name: 'AI Access', icon: 'sparkles' },
   { id: 'shortcuts', name: 'Getting around', icon: 'key' },
   { id: 'about', name: 'About', icon: 'book' },
@@ -211,6 +212,21 @@ export function bootSettings(root) {
     ];
   }
 
+  function iphone() {
+    const phones = state.phones || [];
+    return [
+      h('p.s-lead', 'Pair the House Control iPhone app with this PC and your floor plan, device links and Home Assistant and Hue connections stay the same on both, whichever one you edit. The iPhone sees this PC just like a Mac.'),
+      group(
+        row('phone', 'Pair iPhone', state.paired
+          ? (phones.length ? `Connected: ${phones.join(', ')}` : 'Paired. A phone connects while House Control is open on it, on the same Wi-Fi.')
+          : 'Show a QR code to scan with the iPhone app: Settings → Pair with Mac.',
+        button(state.paired ? 'Show code…' : 'Pair…', () => post('pairPhone'), !state.paired)),
+        row('laptop', 'Name on the network', 'What the iPhone shows for this PC: its Windows device name.', h('span.s-muted', state.computerName || '')),
+      ),
+      h('p.s-note', 'Both devices talk directly on your local network, encrypted with the key in the QR code; nothing goes through a server. Apple Home devices the iPhone shares can be linked in the editor and are switched from the phone.'),
+    ];
+  }
+
   function ai() {
     return [
       h('p.s-lead', 'Give ChatGPT, Claude or any AI assistant a private link — or connect it over MCP — and it can run your lights and air conditioners, and rebuild rooms in the 3D model from your photos. Served by this PC; Stop ends it.'),
@@ -252,7 +268,7 @@ export function bootSettings(root) {
     ];
   }
 
-  const BUILD = { general, island, widget, home, connections, ai, shortcuts, about };
+  const BUILD = { general, island, widget, home, connections, iphone, ai, shortcuts, about };
 
   function render() {
     nav.replaceChildren(...PANES.map((p) => h(`button.s-nav-item${p.id === pane ? '.on' : ''}`, {
@@ -281,6 +297,6 @@ function sample() {
     widgetEnabled: false, widgetLocked: false,
     plans: [{ id: 'home', name: 'Demo · Apartment' }, { id: 'studio', name: 'Demo · Studio' }], activePlan: 'home',
     services: { smartlife: { connected: false }, homeassistant: { connected: true, name: 'Home' }, hue: { connected: false } },
-    aiLive: false, dataDirectory: '%APPDATA%\\HouseControl',
+    paired: true, phones: ['iPhone'], computerName: 'DESKTOP-PC', aiLive: false, dataDirectory: '%APPDATA%\\HouseControl',
   };
 }

@@ -64,6 +64,7 @@ internal sealed partial class App : ApplicationContext
         SystemEvents();
 
         ReloadLinks();
+        StartSync();
         if (IslandWanted) ShowIsland();
         if (_settings.WidgetEnabled) ShowWidget();
         StartWithWindows.FollowMove();
@@ -286,6 +287,7 @@ internal sealed partial class App : ApplicationContext
                 break;
 
             default:
+                if (type != null && HandleSync(host, message, type)) return;
                 if (type != null && HandleConnection(host, message, type)) return;
                 if (type != null && HandleAgent(host, message, type)) return;
                 break;
@@ -349,6 +351,8 @@ internal sealed partial class App : ApplicationContext
         var startup = StartWithWindows.State;
         menu.Add(startup == "disabled" ? "Start with Windows (off in Task Manager)" : "Start with Windows",
             () => SetStartWithWindows(startup != "on"), startup == "on");
+        menu.Add("Pair iPhone…", PairPhone);
+        foreach (var phone in _sync.ConnectedDevices) menu.Add($"{phone} is connected", PairPhone, isChecked: true);
         menu.Add(AgentLive ? "AI Access — Live" : "AI Access…", OpenAgent);
         if (AgentLive) menu.Add("Stop AI Access", StopAgent);
         menu.Separator();
@@ -397,6 +401,7 @@ internal sealed partial class App : ApplicationContext
     {
         ReloadLinks();
         SetPolling(force: true);
+        BroadcastToPhones();
         RefreshSettings();
     }
 
@@ -406,6 +411,7 @@ internal sealed partial class App : ApplicationContext
         _panel.Host.Load();
         _island?.Host.Load();
         _widget?.Host.Load();
+        BroadcastToPhones();
         RefreshSettings();
     }
 
@@ -551,6 +557,9 @@ internal sealed partial class App : ApplicationContext
         state["activePlan"] = _plans.ActivePlan;
         state["services"] = _hub.ServicesInfo;
         state["aiLive"] = AgentLive;
+        state["paired"] = _sync.IsEnabled;
+        state["phones"] = new JsonArray(_sync.ConnectedDevices.Select(p => (JsonNode)p).ToArray());
+        state["computerName"] = ComputerName;
         state["windows11"] = IsWindows11;
         return state;
     }
@@ -749,6 +758,7 @@ internal sealed partial class App : ApplicationContext
         if (Environment.GetEnvironmentVariable("HOUSE_OPEN_SETTINGS") is { } pane)
             Later(800, () => ShowSettings(pane is "" or "1" ? null : pane));
         if (Environment.GetEnvironmentVariable("HOUSE_OPEN_EDITOR") is not null) Later(800, () => ShowEditor(null));
+        if (Environment.GetEnvironmentVariable("HOUSE_OPEN_PAIRING") is not null) Later(800, PairPhone);
         if (Environment.GetEnvironmentVariable("HOUSE_OPEN_AGENT") is { } agent)
             Later(800, () => { OpenAgent(); if (agent == "start") StartAgent(); });
         if (Environment.GetEnvironmentVariable("HOUSE_OPEN_ON_LAUNCH") is not null) Later(1500, () => { if (!_panel.IsOpen) TogglePanel(null); });
@@ -781,6 +791,7 @@ internal sealed partial class App : ApplicationContext
 
     protected override void ExitThreadCore()
     {
+        StopSync();
         _tray.Dispose();
         _hotKey.Dispose();
         _fullscreen.Dispose();

@@ -54,7 +54,7 @@ export function createConnections({ rerender, toast, usedBy, onOpen }) {
     rerender();
   }
 
-  // The Mac pushes this when the paired iPhone sent its Apple Home devices.
+  // The PC pushes this when the paired iPhone sent its Apple Home devices.
   window.house = window.house || {};
   window.house.servicesChanged = (info) => { state.info = info; load({ quiet: true }); };
 
@@ -284,10 +284,10 @@ export function createConnections({ rerender, toast, usedBy, onOpen }) {
     }
     nodes.push(section(info.connected ? 'How it works' : 'Set it up on your iPhone',
       h('ol.steps',
-        h('li', 'Pair your iPhone with this Mac: right-click the menu bar icon → Pair iPhone….'),
+        h('li', 'Pair your iPhone with this PC: right-click the tray icon → Pair iPhone….'),
         h('li', 'On the iPhone: House Control → Settings → Apple Home → Connect, and allow access to your Home data.'),
         h('li', 'Its lamps, air conditioners and thermometers appear here. Link them like any other device.')),
-      h('p.note', 'Apple lets only iPhone, iPad and App Store apps use HomeKit, so the iPhone app switches these devices. On the Mac they show what you set, but stay simulated.')));
+      h('p.note', 'Apple lets only its own devices use HomeKit, so the iPhone app switches these devices. On this PC they show what you set, but stay simulated.')));
     return nodes;
   }
 
@@ -369,7 +369,7 @@ export function createConnections({ rerender, toast, usedBy, onOpen }) {
     return section('Real device',
       h('label.field', h('span', 'Device'), select),
       info ? h(`p.note${offline ? '.bad' : ''}`, offline ? `${info} · offline` : info) : null,
-      device?.service === 'homekit' && state.info.homekit?.remote ? h('p.note', 'Switched from your iPhone; simulated on this Mac.') : null,
+      device?.service === 'homekit' && state.info.homekit?.remote ? h('p.note', 'Switched from your iPhone; simulated on this PC.') : null,
       Object.keys(state.errors).length ? h('p.note.bad', Object.entries(state.errors).map(([s, e]) => `${SERVICES[s]?.name || s}: ${e}`).join(' · ')) : null);
   }
 
