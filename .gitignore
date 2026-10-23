@@ -28,3 +28,6 @@ events.log
 
 # Screenshot and test scratch
 scratch/
+
+# Claude Code session state
+.claude/scheduled_tasks.lock
