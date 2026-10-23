@@ -38,8 +38,8 @@
 - **AI Access.** Give ChatGPT, Claude or any AI assistant a private link — or connect it over MCP — and it runs your
   lights and air conditioners, and rebuilds rooms in the 3D model from your photos. Served by your PC; Stop ends it.
   See [AI Access](#ai-access).
-- **Your iPhone in step.** Pair the House Control iPhone app with your PC and the floor plan, the device links and
-  the Home Assistant and Hue connections stay the same on both. See [iPhone app](#iphone-app).
+- **Your phone in step.** Pair the House Control iPhone or Android app with your PC and the floor plan, the device links and
+  the Home Assistant and Hue connections stay the same on both. See [iPhone and Android app](#iphone-and-android-app).
 - **Works without any hardware.** Until you sign in, every device is simulated, so you can try everything first.
 
 It is a small native shell in C# (.NET 8, Win32 and WinForms) around the same [Three.js](https://threejs.org) web UI
@@ -153,13 +153,13 @@ title to move it; it remembers where it was put. **Lock its position** keeps it 
 
 It draws only when something changes, so it costs nothing while you work.
 
-## iPhone app
+## iPhone and Android app
 
-The [House Control iPhone app](https://github.com/0xProbabillity/house-control#iphone-app) pairs with a PC exactly as
-it pairs with a Mac:
+The [House Control iPhone app](https://github.com/0xProbabillity/house-control#iphone-app) and the
+[Android app](https://github.com/0xProbabillity/house-control-android) pair with a PC exactly as they pair with a Mac:
 
 1. On the PC: right-click the tray icon → **Pair iPhone…** (or **Settings → iPhone → Pair…**). A QR code appears.
-2. On the iPhone: **Settings → Pair with Mac**, and point the camera at the code. Or press **Copy Pairing Link** on
+2. On the phone: **Settings → Pair with Mac**, and point the camera at the code. Or press **Copy Pairing Link** on
    the PC and paste it on the phone.
 
 From then on, whenever both are on the same network and the app is open on the phone, a plan saved on one reaches
@@ -377,7 +377,7 @@ git tag v1.0.0; git push origin v1.0.0
 
 ## Limitations
 
-- The PC and the iPhone sync only while both are on the same network; there is no cloud in between.
+- The PC and the phone sync only while both are on the same network; there is no cloud in between.
 - Apple Home accessories are reached through Home Assistant only (Apple keeps HomeKit to its own devices).
 - The Windows 11 Widgets board takes widgets only from apps installed from the Microsoft Store, so House Control's
   widget lives on the desktop instead.

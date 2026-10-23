@@ -19,7 +19,7 @@
     <Company>0xProbability</Company>
     <Copyright>Copyright © 2026 0xProbability</Copyright>
     <Description>Your home as a live 3D model, in the Windows taskbar.</Description>
-    <Version>1.1.3</Version>
+    <Version>1.1.4</Version>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <!-- WebView2's package also carries its WPF control, whose WindowsBase reference is never loaded here. -->

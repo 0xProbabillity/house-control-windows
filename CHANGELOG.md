@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.4 — 2026-10-23
+
+- **Quitting no longer crashes.** Once a window such as Settings, the editor or Pair iPhone had been open, quitting
+  (or the installer updating the app) ended in a crash inside Windows' messaging. House Control now closes its
+  windows, removes its tray icon and stops AI Access and sync, then ends cleanly.
+- **Android phones sync too.** The House Control Android app pairs with the PC exactly as with a Mac (Settings →
+  Pair with Mac, scan the PC's code); the PC is tested against the Android app's own connection settings.
+
 ## 1.1.3 — 2026-10-23
 
 - **iPhone sync connects.** The iPhone's TLS asks for a certificate's revocation status (`status_request`) in every
