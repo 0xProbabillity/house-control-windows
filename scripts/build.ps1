@@ -46,8 +46,9 @@ foreach ($a in $Arch) {
   Step "App for $a"
   $out = Join-Path $root "artifacts\publish\win-$a"
   if (Test-Path $out) { Remove-Item $out -Recurse -Force }
-  Run dotnet publish src\HouseControl -c Release -r "win-$a" --self-contained true -p:PublishReadyToRun=true `
-    -p:Version=$Version -p:DebugType=none -o $out --nologo
+  # Each -p: argument quoted: PowerShell 7 would split an unquoted -p:Name=value in two.
+  Run dotnet publish src\HouseControl -c Release -r "win-$a" --self-contained true "-p:PublishReadyToRun=true" `
+    "-p:Version=$Version" "-p:DebugType=none" -o $out --nologo
   if (-not (Test-Path "$out\web\index.html")) { throw "The web UI is missing from $out" }
 
   Step "Portable zip for $a"
