@@ -759,6 +759,9 @@ internal sealed partial class App : ApplicationContext
             {
                 try
                 {
+                    // Every animation at its end state first: the camera sweep, lamps fading in.
+                    foreach (var view in new[] { _panel.Host, _island?.Host, _widget?.Host })
+                        if (view != null) try { await view.EvalAsync("window.__house?.world?.settle?.(8);", TimeSpan.FromSeconds(10)); } catch (Exception) { }
                     await _panel.Host.SnapshotAsync(Path.Combine(folder, "panel.png"));
                     if (_island != null) await _island.Host.SnapshotAsync(Path.Combine(folder, "island.png"));
                     if (_widget != null) await _widget.Host.SnapshotAsync(Path.Combine(folder, "widget.png"));

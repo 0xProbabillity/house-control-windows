@@ -292,7 +292,9 @@ html.windows .isle { font-family: 'Segoe UI Variable Text', 'Segoe UI Variable',
    (DesktopWidget.Pad). It never closes, so nothing in it waits for an opening spring. */
 .isle.desk { padding-top: 28px; }
 .isle.desk .isle-shape { border-radius: 26px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08); background: rgba(6, 8, 14, 0.94); }
-.isle.desk .isle-glow { top: 28px; border-radius: 26px; }
+.isle.desk .isle-glow { top: 28px; border-radius: 26px;
+  /* Its window leaves 28px around the card: a shadow any wider would be cut off square. */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 24px -8px rgba(0, 0, 0, 0.7), 0 6px 22px -10px color-mix(in srgb, var(--mood) 80%, transparent); }
 .isle.desk .isle-head.grab { cursor: grab; }
 .isle.desk .isle-head.grab:active { cursor: grabbing; }
 .isle.desk .reveal { transition-delay: 0ms !important; }
