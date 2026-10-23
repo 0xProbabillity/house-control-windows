@@ -783,11 +783,40 @@ internal sealed partial class App : ApplicationContext
         }
     }
 
+    private bool _quitting;
+
+    /// <summary>
+    /// Quits in two steps: closes every window first, then ends the message loop a moment later.
+    /// WebView2 takes its windows down asynchronously; ending the loop at once leaves that half done
+    /// and Windows stops the process from inside its messaging (0xC0000602).
+    /// </summary>
     private void Quit()
     {
+        if (_quitting) return;
+        _quitting = true;
         StopAgentForQuit();
-        ExitThread();
+        _tray.Dispose();
+        foreach (var form in Application.OpenForms.Cast<Form>().ToList()) form.Close();
+        _panel.Hide();
+        _island?.Hide();
+        _widget?.Hide();
+        var later = new System.Windows.Forms.Timer { Interval = 400 };
+        later.Tick += (_, _) =>
+        {
+            later.Dispose();
+            StopSync();
+            Log.Write("House Control quit");
+            // Everything worth keeping is on disk by now. Once a WebView2 has lived in a regular
+            // window, Windows' own messaging fails while the process unloads (0xC0000602, in
+            // CoreMessaging), so the process ends here instead of unwinding.
+            TerminateProcess(GetCurrentProcess(), 0);
+            ExitThread();
+        };
+        later.Start();
     }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")] private static extern IntPtr GetCurrentProcess();
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")] private static extern bool TerminateProcess(IntPtr process, uint exitCode);
 
     protected override void ExitThreadCore()
     {
@@ -796,8 +825,10 @@ internal sealed partial class App : ApplicationContext
         _hotKey.Dispose();
         _fullscreen.Dispose();
         _poll.Dispose();
-        _editor?.Close();
-        _settingsWindow?.Close();
+        // Every window with a WebView in it closes while the message loop still runs (the editor,
+        // Settings, Pair iPhone, AI Access, a phone's sign-in code…): one left to the end of the
+        // process takes it down from inside Windows' messaging.
+        foreach (var form in Application.OpenForms.Cast<Form>().ToList()) form.Close();
         _island?.Dispose();
         _widget?.Dispose();
         _panel.Dispose();
