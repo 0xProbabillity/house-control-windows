@@ -25,6 +25,7 @@ public sealed class SyncServer : IDisposable
     private readonly ISecretStore _store;
     private readonly SynchronizationContext? _context;
     private readonly List<Peer> _peers = new();
+    private readonly object _gate = new();
     private Socket? _listener;
     private CancellationTokenSource? _stop;
 
@@ -46,6 +47,8 @@ public sealed class SyncServer : IDisposable
     public event Action<JsonArray, string>? CatalogReceived;
     /// <summary>A phone sent the floor plan it edited (the file byte for byte, already checked to be a plan).</summary>
     public event Action<byte[], string>? PlanReceived;
+    /// <summary>What happens on the wire, for the app's log: connections, failed handshakes, hellos. Raised on any thread.</summary>
+    public event Action<string>? Diagnostic;
     /// <summary>A phone sent its Home Assistant and Hue connections and the Smart Life User Code it signed in with.</summary>
     public event Action<JsonObject, string, string>? ConnectionsReceived;
 
@@ -133,8 +136,13 @@ public sealed class SyncServer : IDisposable
         try { _listener?.Close(); } catch (SocketException) { }
         _listener = null;
         Port = null;
-        foreach (var peer in _peers.ToList()) Close(peer);
-        _peers.Clear();
+        List<Peer> peers;
+        lock (_peers)
+        {
+            peers = _peers.ToList();
+            _peers.Clear();
+        }
+        foreach (var peer in peers) Close(peer);
         PeersChanged?.Invoke();
     }
 
@@ -150,7 +158,9 @@ public sealed class SyncServer : IDisposable
     public void Broadcast()
     {
         if (Snapshot?.Invoke() is not { } state) return;
-        foreach (var peer in _peers.Where(p => p.Name.Length > 0)) Send(state, peer);
+        List<Peer> peers;
+        lock (_peers) peers = _peers.Where(p => p.Name.Length > 0).ToList();
+        foreach (var peer in peers) Send(state, peer);
     }
 
     private void Send(SyncState state, Peer peer)
@@ -182,6 +192,8 @@ public sealed class SyncServer : IDisposable
     private void Serve(Socket socket, byte[] psk, CancellationToken stop)
     {
         var peer = new Peer(socket);
+        var remote = socket.RemoteEndPoint?.ToString() ?? "?";
+        Diagnostic?.Invoke($"sync: connection from {remote}");
         try
         {
             socket.NoDelay = true;
@@ -195,16 +207,19 @@ public sealed class SyncServer : IDisposable
             socket.ReceiveTimeout = 0;
             peer.Stream = tls.Stream;
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            // A phone holding another key (paired with another computer, or before a reset) ends here.
+            Diagnostic?.Invoke($"sync: handshake with {remote} failed: {e.GetType().Name}: {e.Message}");
             try { socket.Close(); } catch (SocketException) { }
             return;
         }
+        Diagnostic?.Invoke($"sync: {remote} is paired (TLS {peer.Stream?.GetType().Name})");
 
         OnContext(() =>
         {
             if (stop.IsCancellationRequested) { Close(peer); return; }
-            _peers.Add(peer);
+            lock (_peers) _peers.Add(peer);
         });
         _ = Task.Run(() => WriteLoop(peer));
         try
@@ -212,14 +227,17 @@ public sealed class SyncServer : IDisposable
             while (!stop.IsCancellationRequested && SyncFraming.Read(peer.Stream!) is { } message)
                 OnContext(() => Handle(message, peer));
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            Diagnostic?.Invoke($"sync: {remote} closed: {e.GetType().Name}");
             // The phone went away (the app left the screen, Wi-Fi changed): it reconnects by itself.
         }
         OnContext(() =>
         {
             Close(peer);
-            if (_peers.Remove(peer) && peer.Name.Length > 0) PeersChanged?.Invoke();
+            bool removed;
+            lock (_peers) removed = _peers.Remove(peer);
+            if (removed && peer.Name.Length > 0) PeersChanged?.Invoke();
         });
     }
 
@@ -250,7 +268,8 @@ public sealed class SyncServer : IDisposable
 
     private void OnContext(Action action)
     {
-        if (_context is null) lock (_peers) action();
+        // Without a UI thread (tests) the connection threads run it themselves, one at a time.
+        if (_context is null) lock (_gate) action();
         else _context.Post(_ => action(), null);
     }
 
@@ -264,6 +283,7 @@ public sealed class SyncServer : IDisposable
             case "hello":
                 var isNew = peer.Name.Length == 0;
                 peer.Name = message.Str("device") is { Length: > 0 } device ? device : "iPhone";
+                Diagnostic?.Invoke($"sync: hello from {peer.Name}, holding plan revision \"{message.Str("rev")}\"");
                 peer.Revision = message.Str("rev") ?? "";
                 if (Snapshot?.Invoke() is { } state) Send(state, peer);
                 if (isNew) PeersChanged?.Invoke();
