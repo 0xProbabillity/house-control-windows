@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.3 — 2026-10-23
+
+- **iPhone sync connects.** The iPhone's TLS asks for a certificate's revocation status (`status_request`) in every
+  handshake; the PC agreed to send one, though a connection with a pre-shared key has no certificate, and the
+  iPhone ended the handshake with `decode_error`. The PC now declines it, as a Mac does, and pairs with the iPhone
+  app — checked with a real iPhone, whose home arrived on the PC.
+- The app's log notes what a phone offers in its handshake, should one ever fail again.
+
 ## 1.1.2 — 2026-10-23
 
 - **The iPhone completes the handshake.** The PC now sends the pre-shared key's identity hint, as a Mac does;
