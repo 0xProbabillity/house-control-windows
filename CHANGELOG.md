@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.5 — 2026-10-24
+
+- **Pair Phone.** iPhones and Android phones pair with the PC alike, so the tray menu, the pairing window and
+  Settings now say **Pair Phone…** and **Phone** instead of iPhone. On the phone the item is **Pair with Mac or PC**
+  (**Pair with Mac** in versions before the rename); the pairing window names both. Pairing itself is unchanged:
+  phones already paired keep syncing.
+- **Test copies keep to themselves.** A copy started with its own `HOUSE_DATA_DIR` (tests, screenshots) is an
+  instance of its own, so its arguments — a `--quit` included — no longer reach the copy you use every day.
+
 ## 1.1.4 — 2026-10-23
 
 - **Quitting no longer crashes.** Once a window such as Settings, the editor or Pair iPhone had been open, quitting
