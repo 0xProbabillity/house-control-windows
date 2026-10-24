@@ -116,7 +116,7 @@ internal sealed partial class App
         if (_editor != null && _plans.CustomPlan() is { } plan) _editor.Host.Call("planArrived", plan, phone);
     }
 
-    // MARK: Pair iPhone
+    // MARK: Pair Phone
 
     private void PairPhone()
     {
@@ -126,7 +126,7 @@ internal sealed partial class App
         if (_pairingWindow is null)
         {
             var host = Attach(new WebHost("pairing", () => new JsonObject { ["qr"] = PairingView() }));
-            _pairingWindow = new PageWindow(host, "Pair iPhone", new Size(460, 700), new Size(400, 560), _windows, "pairing");
+            _pairingWindow = new PageWindow(host, "Pair Phone", new Size(460, 700), new Size(400, 560), _windows, "pairing");
             // Re-checks the network and the firewall while the window is open: making the network
             // private in Settings changes nothing the app is told about.
             var recheck = new System.Windows.Forms.Timer { Interval = 3000 };
@@ -157,28 +157,28 @@ internal sealed partial class App
         else if (!MdnsAdvertiser.IsSupported) status = "This version of Windows cannot announce the PC on the network. Update Windows 10 to 1809 or newer.";
         else if (publicNetworks.Count > 0)
         {
-            status = $"Windows treats “{publicNetworks[0]}” as a public network, so the iPhone cannot reach this PC. Make it a private network.";
+            status = $"Windows treats “{publicNetworks[0]}” as a public network, so the phone cannot reach this PC. Make it a private network.";
             fixes.Add(new JsonObject { ["label"] = "Open Network Settings", ["action"] = "pairing.network", ["primary"] = true });
         }
         else if (firewallBlocks)
         {
-            status = "Windows Firewall does not let the iPhone connect to House Control yet.";
+            status = "Windows Firewall does not let the phone connect to House Control yet.";
             fixes.Add(new JsonObject { ["label"] = "Allow in Firewall…", ["action"] = "pairing.firewall", ["primary"] = true });
         }
-        else status = "Waiting for an iPhone…";
+        else status = "Waiting for a phone…";
         fixes.Add(new JsonObject { ["label"] = "Copy Pairing Link", ["action"] = "pairing.copy" });
         fixes.Add(new JsonObject { ["label"] = "Reset Pairing…", ["action"] = "pairing.reset" });
         return new JsonObject
         {
             ["qr"] = _sync.Pairing is { } pairing ? QrPng.DataUrl(pairing.Link) : null,
-            ["headline"] = "Scan with House Control on your iPhone",
-            ["detail"] = $"On the iPhone open Settings → Pair with Mac, and point the camera at this code. It finds {ComputerName} on your Wi-Fi like a Mac.",
+            ["headline"] = "Scan with House Control on your phone",
+            ["detail"] = $"On the phone, Android or iPhone, open Settings → Pair with Mac or PC (Pair with Mac in older versions), and point the camera at this code. It finds {ComputerName} on your Wi-Fi like a Mac.",
             ["status"] = status,
             ["active"] = active,
             ["steps"] = new JsonArray(
                 "Both devices on the same Wi-Fi (or this PC on the same router by cable).",
                 "If Windows asks whether House Control may use private networks, allow it.",
-                "On the iPhone, allow House Control to use the local network when it asks."),
+                "On an iPhone, allow House Control to use the local network when it asks."),
             ["buttons"] = fixes,
             ["note"] = "Your floor plan, device links and Home Assistant and Hue connections stay the same on both, whichever one you edit. "
                 + "They travel straight between them, encrypted with the key in this code; nothing goes through a server.",
@@ -195,7 +195,7 @@ internal sealed partial class App
                 Clipboard.SetText(pairing.Link);
                 return true;
             case "pairing.reset":
-                var answer = MessageBox.Show("Every iPhone paired so far stops syncing until it scans the new code.",
+                var answer = MessageBox.Show("Every phone paired so far stops syncing until it scans the new code.",
                     "Reset pairing?", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
                 if (answer == DialogResult.OK)
                 {
@@ -239,8 +239,8 @@ internal sealed partial class App
         {
             ["qr"] = QrPng.DataUrl(content),
             ["headline"] = $"Scan with the Smart Life app on {device}",
-            ["detail"] = "Switch to Smart Life on the iPhone, tap the scanner on its Home tab and confirm the sign-in. "
-                + "Then return to House Control: this window closes once the iPhone is signed in.",
+            ["detail"] = "Switch to Smart Life on the phone, tap the scanner on its Home tab and confirm the sign-in. "
+                + "Then return to House Control: this window closes once the phone is signed in.",
             ["status"] = $"Requested by {device}",
             ["active"] = true,
         };

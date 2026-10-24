@@ -12,7 +12,7 @@ const PANES = [
   { id: 'widget', name: 'Desktop widget', icon: 'laptop' },
   { id: 'home', name: 'Home', icon: 'home' },
   { id: 'connections', name: 'Connections', icon: 'link' },
-  { id: 'iphone', name: 'iPhone', icon: 'phone' },
+  { id: 'iphone', name: 'Phone', icon: 'phone' },
   { id: 'ai', name: 'AI Access', icon: 'sparkles' },
   { id: 'shortcuts', name: 'Getting around', icon: 'key' },
   { id: 'about', name: 'About', icon: 'book' },
@@ -215,15 +215,15 @@ export function bootSettings(root) {
   function iphone() {
     const phones = state.phones || [];
     return [
-      h('p.s-lead', 'Pair the House Control iPhone app with this PC and your floor plan, device links and Home Assistant and Hue connections stay the same on both, whichever one you edit. The iPhone sees this PC just like a Mac.'),
+      h('p.s-lead', 'Pair the House Control app for Android or iPhone with this PC and your floor plan, device links and Home Assistant and Hue connections stay the same on both, whichever one you edit. The phone sees this PC just like a Mac.'),
       group(
-        row('phone', 'Pair iPhone', state.paired
+        row('phone', 'Pair Phone', state.paired
           ? (phones.length ? `Connected: ${phones.join(', ')}` : 'Paired. A phone connects while House Control is open on it, on the same Wi-Fi.')
-          : 'Show a QR code to scan with the iPhone app: Settings → Pair with Mac.',
+          : 'Show a QR code to scan with the phone app: Settings → Pair with Mac or PC (Pair with Mac in older versions).',
         button(state.paired ? 'Show code…' : 'Pair…', () => post('pairPhone'), !state.paired)),
-        row('laptop', 'Name on the network', 'What the iPhone shows for this PC: its Windows device name.', h('span.s-muted', state.computerName || '')),
+        row('laptop', 'Name on the network', 'What the phone shows for this PC: its Windows device name.', h('span.s-muted', state.computerName || '')),
       ),
-      h('p.s-note', 'Both devices talk directly on your local network, encrypted with the key in the QR code; nothing goes through a server. Apple Home devices the iPhone shares can be linked in the editor and are switched from the phone.'),
+      h('p.s-note', 'Both devices talk directly on your local network, encrypted with the key in the QR code; nothing goes through a server. Apple Home devices an iPhone shares can be linked in the editor and are switched from the phone.'),
     ];
   }
 

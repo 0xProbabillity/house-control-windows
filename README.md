@@ -158,9 +158,9 @@ It draws only when something changes, so it costs nothing while you work.
 The [House Control iPhone app](https://github.com/0xProbabillity/house-control#iphone-app) and the
 [Android app](https://github.com/0xProbabillity/house-control-android) pair with a PC exactly as they pair with a Mac:
 
-1. On the PC: right-click the tray icon → **Pair iPhone…** (or **Settings → iPhone → Pair…**). A QR code appears.
-2. On the phone: **Settings → Pair with Mac**, and point the camera at the code. Or press **Copy Pairing Link** on
-   the PC and paste it on the phone.
+1. On the PC: right-click the tray icon → **Pair Phone…** (or **Settings → Phone → Pair…**). A QR code appears.
+2. On the phone: **Settings → Pair with Mac or PC** (**Pair with Mac** in older versions), and point the camera at
+   the code. Or press **Copy Pairing Link** on the PC and paste it on the phone.
 
 From then on, whenever both are on the same network and the app is open on the phone, a plan saved on one reaches
 the other a moment later, whichever one you edit; a home set up on the phone first comes to the PC when you pair
@@ -184,7 +184,7 @@ internet → Wi-Fi → your network → **Private network**), which is what it i
 
 **Settings…** in the tray icon's menu (or `Ctrl+,` in the panel) has everything in one place: Start with Windows,
 the keyboard shortcut (click it and press a new one), the tray badge, the island (its width and how see-through it
-is), the desktop widget, your floor plans, the connections, iPhone pairing, AI Access and a list of every shortcut.
+is), the desktop widget, your floor plans, the connections, phone pairing, AI Access and a list of every shortcut.
 
 **Start with Windows** adds House Control to your account's startup apps; Task Manager's **Startup apps** tab can
 switch it off too, and Settings shows when it has.
@@ -257,7 +257,7 @@ Everything personal stays in `%APPDATA%\HouseControl\` on your PC:
 | `events.log` | Commands sent to real devices and the cloud's answers. No tokens |
 | `app.log` | The app's own diagnostics, such as script errors. No tokens |
 | `agent.json`, `bin\cloudflared.exe` | AI Access settings, and Cloudflare's connector if you let the app download it |
-| `sync.json` | The key your paired iPhones use. Only there once you paired one. Encrypted |
+| `sync.json` | The key your paired phones use. Only there once you paired one. Encrypted |
 | `homekit-devices.json`, `connections-sync.json` | The Apple Home devices your iPhone listed for the editor (names and ids); when each shared connection last changed |
 
 The web views keep their own small profile (window state, the last panel state) in `%LOCALAPPDATA%\HouseControl\WebView2`.
@@ -337,8 +337,8 @@ Environment variables understood by the app:
 | `HOUSE_ISLAND=0` | Run without the island (`1` forces it on) |
 | `HOUSE_ISLAND_EXPANDED=1` | Keep the island open |
 | `HOUSE_SNAPSHOT_DIR=C:\some\folder` | Write `panel.png`, `island.png`, `widget.png`, `settings.png` and `editor.png` there a few seconds after launch (`HOUSE_SNAPSHOT_DELAY` seconds, 6 by default) |
-| `HOUSE_OPEN_PAIRING=1` | Open the Pair iPhone window at launch |
-| `HOUSE_COMPUTER_NAME="Studio PC"` | The name paired iPhones see, instead of the PC's own |
+| `HOUSE_OPEN_PAIRING=1` | Open the Pair Phone window at launch |
+| `HOUSE_COMPUTER_NAME="Studio PC"` | The name paired phones see, instead of the PC's own |
 | `HOUSE_OPEN_AGENT=1` | Open the AI Access window at launch (`start` also starts the link) |
 | `HOUSE_AGENT_REACH=local` | Serve AI Access on this PC only for one run (`internet` for the tunnel) |
 | `HOUSE_AGENT_LINK_FILE=C:\some\file` | Write the live AI Access link there, for scripted tests |
