@@ -36,10 +36,10 @@ function sample() {
   return {
     qr: null,
     headline: 'Scan with House Control on your phone',
-    detail: 'On the phone, Android or iPhone, open Settings → Pair with Mac or PC. Both devices must be on the same Wi-Fi.',
+    detail: 'On the phone, Android or iPhone, open Settings → Pair with Mac or PC (Pair with Mac in older versions). Both devices must be on the same Wi-Fi.',
     status: 'Waiting for a phone…',
     active: false,
-    steps: ['Open House Control on the phone.', 'Settings → Pair with Mac or PC.', 'Point the camera at this code.'],
+    steps: ['Open House Control on the phone.', 'Settings → Pair with Mac or PC (or Pair with Mac).', 'Point the camera at this code.'],
     buttons: [{ label: 'Copy Pairing Link', action: 'pairing.copy' }, { label: 'Reset Pairing…', action: 'pairing.reset' }],
     note: 'Your floor plan, device links and connections stay the same on both.',
   };

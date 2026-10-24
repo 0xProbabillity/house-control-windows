@@ -219,7 +219,7 @@ export function bootSettings(root) {
       group(
         row('phone', 'Pair Phone', state.paired
           ? (phones.length ? `Connected: ${phones.join(', ')}` : 'Paired. A phone connects while House Control is open on it, on the same Wi-Fi.')
-          : 'Show a QR code to scan with the phone app: Settings → Pair with Mac or PC.',
+          : 'Show a QR code to scan with the phone app: Settings → Pair with Mac or PC (Pair with Mac in older versions).',
         button(state.paired ? 'Show code…' : 'Pair…', () => post('pairPhone'), !state.paired)),
         row('laptop', 'Name on the network', 'What the phone shows for this PC: its Windows device name.', h('span.s-muted', state.computerName || '')),
       ),

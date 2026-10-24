@@ -172,7 +172,7 @@ internal sealed partial class App
         {
             ["qr"] = _sync.Pairing is { } pairing ? QrPng.DataUrl(pairing.Link) : null,
             ["headline"] = "Scan with House Control on your phone",
-            ["detail"] = $"On the phone, Android or iPhone, open Settings → Pair with Mac or PC, and point the camera at this code. It finds {ComputerName} on your Wi-Fi like a Mac.",
+            ["detail"] = $"On the phone, Android or iPhone, open Settings → Pair with Mac or PC (Pair with Mac in older versions), and point the camera at this code. It finds {ComputerName} on your Wi-Fi like a Mac.",
             ["status"] = status,
             ["active"] = active,
             ["steps"] = new JsonArray(
