@@ -356,7 +356,7 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
     const timerChipText = h('span', 'Timer');
     const timerChip = h('button.toggle-chip.timer-chip', {
       'aria-label': 'Timer auto-off',
-      title: 'Desligar com temporizador',
+      title: 'Auto-off countdown timer',
       onclick: () => {
         haptic('light');
         const a = s();
@@ -401,9 +401,9 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
     };
 
     const timerRow = h('div.slider-row.timer-row',
-      h('button.round', { 'aria-label': 'Menos tempo', onclick: () => stepTimer(-30) }, icon('minus', 18, 2.2)),
+      h('button.round', { 'aria-label': 'Less time', onclick: () => stepTimer(-30) }, icon('minus', 18, 2.2)),
       timerSlider.el,
-      h('button.round', { 'aria-label': 'Mais tempo', onclick: () => stepTimer(30) }, icon('plus', 18, 2.2)));
+      h('button.round', { 'aria-label': 'More time', onclick: () => stepTimer(30) }, icon('plus', 18, 2.2)));
 
     const features = () => store.acFeatures(id);
     const option = (key, label, labels, values, iconName) => {
@@ -471,7 +471,7 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
         timerChip.classList.toggle('on', isTimerOn);
         timerChipText.textContent = isTimerOn ? formatCountdown(remainingMs) : 'Timer';
 
-        timerLabel.textContent = isTimerOn ? `Desliga em ${formatCountdown(remainingMs)}` : 'Off';
+        timerLabel.textContent = isTimerOn ? `Off in ${formatCountdown(remainingMs)}` : 'Off';
         timerLabel.classList.toggle('active', isTimerOn);
 
         const currentVal = isTimerOn ? Math.round(remainingMs / 60000) : 0;
