@@ -18,6 +18,8 @@ function defaultAC(cfg, outdoor) {
     sleep: false, eco: false, roomTemp: Math.min(outdoor - 2, 27),
     // On but not running right now (a real thermostat says so); never sent to a device.
     idle: false,
+    timerMinutes: 0,
+    timerEnd: null,
   };
 }
 
@@ -149,11 +151,12 @@ export function createStore(config) {
     if ('target' in clean) clean.target = clamp(Math.round(clean.target), cfg.min, cfg.max);
     // Switched on here: running until the thermostat says otherwise at the next poll.
     if (!remote && clean.on === true && !cur.on) clean.idle = false;
+    if (clean.on === false) clean.timerEnd = null;
     const diff = Object.fromEntries(Object.entries(clean).filter(([k, v]) => cur[k] !== v));
     if (!Object.keys(diff).length) return false;
     const before = Object.fromEntries(Object.keys(diff).map((k) => [k, cur[k]]));
     Object.assign(cur, clean);
-    const { roomTemp, idle, ...sendable } = diff;
+    const { roomTemp, idle, timerEnd, timerMinutes, ...sendable } = diff;
     if (!remote && Object.keys(sendable).length) dispatch('ac', id, sendable, before);
     return true;
   }
@@ -249,21 +252,38 @@ export function createStore(config) {
     },
   };
 
-  // Without real sensors the room temperature is simulated: it drifts towards the
-  // set-point while an AC runs and back towards the outdoor-ish ambient when it is off.
+  // Ticks every second: evaluates auto-off countdown timers for ACs and simulates room temperature.
+  let simTicks = 0;
   setInterval(() => {
     let any = false;
+    const now = Date.now();
+
     for (const [id, a] of Object.entries(state.acs)) {
-      const cfg = acCfg.get(id);
-      if (cfg.tuya?.sensorId || cfg.sensor?.id || cfg.link?.id) continue; // a real sensor or unit reports this room
-      const ambient = Math.min(config.outdoorTemp - 2, 27);
-      const goal = a.on && a.mode !== 'fan' ? a.target : ambient;
-      const step = a.on ? 0.2 : 0.1;
-      const next = Math.abs(goal - a.roomTemp) <= step ? goal : a.roomTemp + Math.sign(goal - a.roomTemp) * step;
-      if (next !== a.roomTemp) { a.roomTemp = Math.round(next * 10) / 10; any = true; }
+      if (a.on && a.timerEnd && now >= a.timerEnd) {
+        store.setAC(id, { on: false, timerEnd: null });
+        any = true;
+      }
     }
-    if (any) { for (const fn of listeners) fn({ type: 'tick' }); persist(); }
-  }, 3000);
+
+    simTicks = (simTicks + 1) % 3;
+    if (simTicks === 0) {
+      for (const [id, a] of Object.entries(state.acs)) {
+        const cfg = acCfg.get(id);
+        if (cfg.tuya?.sensorId || cfg.sensor?.id || cfg.link?.id) continue;
+        const ambient = Math.min(config.outdoorTemp - 2, 27);
+        const goal = a.on && a.mode !== 'fan' ? a.target : ambient;
+        const step = a.on ? 0.2 : 0.1;
+        const next = Math.abs(goal - a.roomTemp) <= step ? goal : a.roomTemp + Math.sign(goal - a.roomTemp) * step;
+        if (next !== a.roomTemp) { a.roomTemp = Math.round(next * 10) / 10; any = true; }
+      }
+    }
+
+    const hasActiveTimer = Object.values(state.acs).some((a) => a.on && a.timerEnd && a.timerEnd > now);
+    if (any || hasActiveTimer) {
+      for (const fn of listeners) fn({ type: 'tick' });
+      if (any) persist();
+    }
+  }, 1000);
 
   return store;
 }

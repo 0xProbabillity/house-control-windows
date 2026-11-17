@@ -16,6 +16,18 @@ const SWATCHES = ['#ff5a4f', '#ff9a3c', '#ffd84a', '#5fe08a', '#42d6e8', '#4f8df
 const TEMP_GRADIENT = 'linear-gradient(90deg, #2f7df6 0%, #58b4f5 34%, #f3e2c0 62%, #f6a54a 82%, #f0762c 100%)';
 const DIM_GRADIENT = 'linear-gradient(90deg, #4a4f5e 0%, #b9a98c 45%, #ffe2b0 100%)';
 const KELVIN_GRADIENT = 'linear-gradient(90deg, #ff9438 0%, #ffbd7a 30%, #ffe2c2 62%, #dfe9ff 100%)';
+const TIMER_GRADIENT = 'linear-gradient(90deg, #1c4fc0 0%, #3d8bff 45%, #60a5fa 80%, #93c5fd 100%)';
+
+function formatCountdown(ms) {
+  if (!ms || ms <= 0) return 'Off';
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}h ${m > 0 ? `${m}m` : '00m'}`;
+  if (m > 0) return `${m}m ${m < 5 ? `${s}s` : ''}`.trim();
+  return `${s}s`;
+}
 
 const NAVY = new THREE.Color('#17274f');
 const tmp = new THREE.Color();
@@ -231,7 +243,9 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
         el.style.setProperty('--c', MODE_COLORS[s.mode]);
         if (shownMode !== s.mode) { bubble.replaceChildren(icon(s.mode, 19)); shownMode = s.mode; }
         value.textContent = `${s.target}°`;
-        sub.textContent = `${!s.on ? 'Off' : s.idle ? 'Idle' : MODE_LABEL[s.mode]} · Room ${s.roomTemp.toFixed(isPhone ? 0 : 1)}°`;
+        const remaining = (s.on && s.timerEnd && s.timerEnd > Date.now()) ? (s.timerEnd - Date.now()) : 0;
+        const timerPart = remaining > 0 ? ` · ⏱ ${formatCountdown(remaining)}` : '';
+        sub.textContent = `${!s.on ? 'Off' : s.idle ? 'Idle' : MODE_LABEL[s.mode]} · Room ${s.roomTemp.toFixed(isPhone ? 0 : 1)}°${timerPart}`;
       },
     };
   }
@@ -338,6 +352,47 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
       onInput: (v) => set({ on: true, target: v }),
     });
 
+    // Auto-off timer controls (countdown timer to send power-off signal after elapsed time)
+    const timerLabel = h('span.timer-val', 'Off');
+    const timerHeader = h('div.timer-header',
+      h('div.timer-title', icon('clock', 15, 2.2), h('span', 'Timer')),
+      timerLabel);
+
+    const timerSlider = createSlider({
+      min: 0, max: 480, step: 15, value: 0, gradient: TIMER_GRADIENT,
+      labels: ['Off', '8h'],
+      onInput: (v) => {
+        if (v <= 0) {
+          set({ timerEnd: null, timerMinutes: 0 });
+        } else {
+          set({ on: true, timerMinutes: v, timerEnd: Date.now() + v * 60 * 1000 });
+        }
+      },
+    });
+
+    const stepTimer = (delta) => {
+      haptic('tick');
+      const a = s();
+      let currentMins = 0;
+      if (a.timerEnd && a.timerEnd > Date.now()) {
+        currentMins = Math.round((a.timerEnd - Date.now()) / 60000);
+      } else if (a.timerMinutes > 0) {
+        currentMins = a.timerMinutes;
+      }
+      let next = Math.round((currentMins + delta) / 15) * 15;
+      next = clamp(next, 0, 480);
+      if (next <= 0) {
+        set({ timerEnd: null, timerMinutes: 0 });
+      } else {
+        set({ on: true, timerMinutes: next, timerEnd: Date.now() + next * 60 * 1000 });
+      }
+    };
+
+    const timerRow = h('div.slider-row',
+      h('button.round', { 'aria-label': 'Less time', onclick: () => stepTimer(-30) }, icon('minus', 18, 2.2)),
+      timerSlider.el,
+      h('button.round', { 'aria-label': 'More time', onclick: () => stepTimer(30) }, icon('plus', 18, 2.2)));
+
     const features = () => store.acFeatures(id);
     const option = (key, label, labels, values, iconName) => {
       const value = h('div.option-value');
@@ -381,6 +436,8 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
           h('button.round', { 'aria-label': 'Cooler', onclick: () => { haptic('tick'); set({ on: true, target: s().target - 1 }); } }, icon('minus', 18, 2.2)),
           slider.el,
           h('button.round', { 'aria-label': 'Warmer', onclick: () => { haptic('tick'); set({ on: true, target: s().target + 1 }); } }, icon('plus', 18, 2.2))),
+        timerHeader,
+        timerRow,
         options,
       ],
       update() {
@@ -396,6 +453,15 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
           h('span.live', { style: { background: a.on ? MODE_COLORS[a.mode] : 'rgba(255,255,255,.25)', boxShadow: a.on && !a.idle ? `0 0 8px ${MODE_COLORS[a.mode]}` : 'none' } }));
         big.set(a.target, !a.on);
         slider.set(a.target);
+
+        const remainingMs = (a.on && a.timerEnd && a.timerEnd > Date.now()) ? (a.timerEnd - Date.now()) : 0;
+        const isTimerOn = remainingMs > 0;
+        timerLabel.textContent = isTimerOn ? `Off in ${formatCountdown(remainingMs)}` : 'Off';
+        timerLabel.classList.toggle('active', isTimerOn);
+
+        const currentVal = isTimerOn ? Math.round(remainingMs / 60000) : 0;
+        timerSlider.set(currentVal);
+
         eco.classList.toggle('on', a.eco);
         mode.update(); fan.update(); swing.update();
         sleep.classList.toggle('active', a.sleep);
