@@ -16,7 +16,7 @@ const SWATCHES = ['#ff5a4f', '#ff9a3c', '#ffd84a', '#5fe08a', '#42d6e8', '#4f8df
 const TEMP_GRADIENT = 'linear-gradient(90deg, #2f7df6 0%, #58b4f5 34%, #f3e2c0 62%, #f6a54a 82%, #f0762c 100%)';
 const DIM_GRADIENT = 'linear-gradient(90deg, #4a4f5e 0%, #b9a98c 45%, #ffe2b0 100%)';
 const KELVIN_GRADIENT = 'linear-gradient(90deg, #ff9438 0%, #ffbd7a 30%, #ffe2c2 62%, #dfe9ff 100%)';
-const TIMER_GRADIENT = 'linear-gradient(90deg, #3d8bff 0%, #7c5cff 50%, #f6a54a 100%)';
+const TIMER_GRADIENT = 'linear-gradient(90deg, #1c4fc0 0%, #3d8bff 45%, #60a5fa 80%, #93c5fd 100%)';
 
 function formatCountdown(ms) {
   if (!ms || ms <= 0) return 'Off';
@@ -353,25 +353,13 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
     });
 
     // Auto-off timer controls (countdown timer to send power-off signal after elapsed time)
-    const timerChipText = h('span', 'Timer');
-    const timerChip = h('button.toggle-chip.timer-chip', {
-      'aria-label': 'Timer auto-off',
-      title: 'Auto-off countdown timer',
-      onclick: () => {
-        haptic('light');
-        const a = s();
-        if (a.timerEnd && a.timerEnd > Date.now()) {
-          set({ timerEnd: null, timerMinutes: 0 });
-        } else {
-          const mins = (a.timerMinutes && a.timerMinutes > 0) ? a.timerMinutes : 60;
-          set({ on: true, timerMinutes: mins, timerEnd: Date.now() + mins * 60 * 1000 });
-        }
-      },
-    }, icon('clock', 17), timerChipText, h('span.switch'));
+    const timerLabel = h('span.timer-val', 'Off');
+    const timerHeader = h('div.timer-header',
+      h('div.timer-title', icon('clock', 15, 2.2), h('span', 'Timer')),
+      timerLabel);
 
-    const timerLabel = h('span.timer-status', 'Off');
     const timerSlider = createSlider({
-      min: 0, max: 480, step: 15, value: 0, gradient: TIMER_GRADIENT, compact: true,
+      min: 0, max: 480, step: 15, value: 0, gradient: TIMER_GRADIENT,
       labels: ['Off', '8h'],
       onInput: (v) => {
         if (v <= 0) {
@@ -400,7 +388,7 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
       }
     };
 
-    const timerRow = h('div.slider-row.timer-row',
+    const timerRow = h('div.slider-row',
       h('button.round', { 'aria-label': 'Less time', onclick: () => stepTimer(-30) }, icon('minus', 18, 2.2)),
       timerSlider.el,
       h('button.round', { 'aria-label': 'More time', onclick: () => stepTimer(30) }, icon('plus', 18, 2.2)));
@@ -443,12 +431,12 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
     return {
       nodes: [
         sheetHead(cfg.name, sub, powerBtn),
-        h('div.readout', big.el, timerChip, eco),
+        h('div.readout', big.el, eco),
         h('div.slider-row',
           h('button.round', { 'aria-label': 'Cooler', onclick: () => { haptic('tick'); set({ on: true, target: s().target - 1 }); } }, icon('minus', 18, 2.2)),
           slider.el,
           h('button.round', { 'aria-label': 'Warmer', onclick: () => { haptic('tick'); set({ on: true, target: s().target + 1 }); } }, icon('plus', 18, 2.2))),
-        h('div.field-label', h('span', icon('clock', 13, 2), ' Timer · Auto-off'), timerLabel),
+        timerHeader,
         timerRow,
         options,
       ],
@@ -468,9 +456,6 @@ export function createPanel(root, config, store, { onFocus, onMenu }) {
 
         const remainingMs = (a.on && a.timerEnd && a.timerEnd > Date.now()) ? (a.timerEnd - Date.now()) : 0;
         const isTimerOn = remainingMs > 0;
-        timerChip.classList.toggle('on', isTimerOn);
-        timerChipText.textContent = isTimerOn ? formatCountdown(remainingMs) : 'Timer';
-
         timerLabel.textContent = isTimerOn ? `Off in ${formatCountdown(remainingMs)}` : 'Off';
         timerLabel.classList.toggle('active', isTimerOn);
 
