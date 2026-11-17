@@ -42,8 +42,9 @@ export function createAgent({ store, config, raw, render, onAction }) {
 
   function acState(cfg, s = state.acs[cfg.id]) {
     const room = `room ${s.roomTemp.toFixed(1)}°C`;
+    const timer = (s.on && s.timerEnd && s.timerEnd > Date.now()) ? `, auto-off in ${Math.round((s.timerEnd - Date.now()) / 60000)}m` : '';
     if (!s.on) return `off (${room})`;
-    return `on, ${s.mode}, target ${s.target}°C, fan ${s.fan} (${room})`;
+    return `on, ${s.mode}, target ${s.target}°C, fan ${s.fan} (${room}${timer})`;
   }
 
   const lightJSON = (cfg) => ({
@@ -191,6 +192,19 @@ export function createAgent({ store, config, raw, render, onAction }) {
         if (!f.fans.includes(args.fan)) fail(`${cfg.name} fan speeds: ${f.fans.join(', ')}.`);
         patch.fan = args.fan;
       }
+      if (args.timer_minutes != null || args.timer_hours != null || args.timer != null) {
+        const rawMins = args.timer_minutes ?? (args.timer_hours != null ? args.timer_hours * 60 : args.timer);
+        const mins = Math.round(Number(rawMins));
+        if (mins > 0) {
+          patch.timerMinutes = mins;
+          patch.timerEnd = Date.now() + mins * 60 * 1000;
+          notes.push(`Timer set: auto-off in ${mins >= 60 ? `${(mins / 60).toFixed(1)}h` : `${mins}m`}.`);
+        } else {
+          patch.timerMinutes = 0;
+          patch.timerEnd = null;
+          notes.push('Timer cleared.');
+        }
+      }
       // "Set the bedroom AC to 22" means it should be running.
       if (args.on != null) patch.on = Boolean(args.on);
       else if (Object.keys(patch).length) patch.on = true;
@@ -198,7 +212,7 @@ export function createAgent({ store, config, raw, render, onAction }) {
       store.setAC(cfg.id, patch);
       changed.push(cfg);
     }
-    if (!changed.length) fail('Nothing to change: pass "on", "temperature", "mode" or "fan".');
+    if (!changed.length) fail('Nothing to change: pass "on", "temperature", "mode", "fan" or "timer_minutes".');
     return { changed, notes };
   }
 
@@ -296,6 +310,8 @@ export function createAgent({ store, config, raw, render, onAction }) {
           temperature: { type: 'number', description: 'Target in °C' },
           mode: { type: 'string', enum: AC_MODES },
           fan: { type: 'string', enum: AC_FANS },
+          timer_minutes: { type: 'number', description: 'Countdown timer in minutes to automatically turn off the air conditioner (e.g. 180 for 3 hours)' },
+          timer_hours: { type: 'number', description: 'Countdown timer in hours to automatically turn off the air conditioner (e.g. 3)' },
         },
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
